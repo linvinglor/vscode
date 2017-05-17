@@ -377,6 +377,10 @@ export interface IEditorOptions {
 	 */
 	snippetSuggestions?: 'top' | 'bottom' | 'inline' | 'none';
 	/**
+	 * Control where the findWidget is shown;
+	 */
+	findWidget?: 'default' | 'top' | 'bottom';
+	/**
 	 * Copying without a selection copies the current line.
 	 */
 	emptySelectionClipboard?: boolean;
@@ -729,6 +733,7 @@ export interface EditorContribOptions {
 	readonly acceptSuggestionOnEnter: boolean;
 	readonly acceptSuggestionOnCommitCharacter: boolean;
 	readonly snippetSuggestions: 'top' | 'bottom' | 'inline' | 'none';
+	readonly findWidget: 'default' | 'top' | 'bottom';
 	readonly emptySelectionClipboard: boolean;
 	readonly wordBasedSuggestions: boolean;
 	readonly suggestFontSize: number;
@@ -1004,6 +1009,7 @@ export class InternalEditorOptions {
 			&& a.acceptSuggestionOnEnter === b.acceptSuggestionOnEnter
 			&& a.acceptSuggestionOnCommitCharacter === b.acceptSuggestionOnCommitCharacter
 			&& a.snippetSuggestions === b.snippetSuggestions
+			&& a.findWidget === b.findWidget
 			&& a.emptySelectionClipboard === b.emptySelectionClipboard
 			&& a.wordBasedSuggestions === b.wordBasedSuggestions
 			&& a.suggestFontSize === b.suggestFontSize
@@ -1527,6 +1533,7 @@ export class EditorOptionsValidator {
 			acceptSuggestionOnEnter: _boolean(opts.acceptSuggestionOnEnter, defaults.acceptSuggestionOnEnter),
 			acceptSuggestionOnCommitCharacter: _boolean(opts.acceptSuggestionOnCommitCharacter, defaults.acceptSuggestionOnCommitCharacter),
 			snippetSuggestions: _stringSet<'top' | 'bottom' | 'inline' | 'none'>(opts.snippetSuggestions, defaults.snippetSuggestions, ['top', 'bottom', 'inline', 'none']),
+			findWidget: _stringSet<'default' | 'top' | 'bottom'>(opts.findWidget, defaults.findWidget, ['default', 'top', 'bottom']),
 			emptySelectionClipboard: _boolean(opts.emptySelectionClipboard, defaults.emptySelectionClipboard),
 			wordBasedSuggestions: _boolean(opts.wordBasedSuggestions, defaults.wordBasedSuggestions),
 			suggestFontSize: _clampedInt(opts.suggestFontSize, defaults.suggestFontSize, 0, 1000),
@@ -1933,6 +1940,7 @@ export const EDITOR_DEFAULTS: IValidatedEditorOptions = {
 		acceptSuggestionOnEnter: true,
 		acceptSuggestionOnCommitCharacter: true,
 		snippetSuggestions: 'inline',
+		findWidget: 'default',
 		emptySelectionClipboard: true,
 		wordBasedSuggestions: true,
 		suggestFontSize: 0,

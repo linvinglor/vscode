@@ -244,6 +244,7 @@ const configurationValueWhitelist = [
 	'files.autoGuessEncoding',
 	'editor.quickSuggestionsDelay',
 	'editor.snippetSuggestions',
+	'editor.findWidget',
 	'editor.selectionHighlight',
 	'editor.occurrencesHighlight',
 	'editor.glyphMargin',

@@ -160,7 +160,12 @@ export enum OverlayWidgetPositionPreference {
 	/**
 	 * Position the overlay widget in the top center
 	 */
-	TOP_CENTER
+	TOP_CENTER,
+
+	/**
+	 * Position the overlay widget in the top center
+	 */
+	BOTTOM_STICK
 }
 /**
  * A position for rendering overlay widgets.
@@ -170,6 +175,7 @@ export interface IOverlayWidgetPosition {
 	 * The position preference for the overlay widget.
 	 */
 	preference: OverlayWidgetPositionPreference;
+	reRender?: boolean;
 }
 /**
  * An overlay widgets renders on top of the text.

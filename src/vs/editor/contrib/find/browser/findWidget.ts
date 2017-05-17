@@ -17,7 +17,7 @@ import { FindInput, IFindInputStyles } from 'vs/base/browser/ui/findinput/findIn
 import { IMessage as InputBoxMessage, InputBox } from 'vs/base/browser/ui/inputbox/inputBox';
 import { Widget } from 'vs/base/browser/ui/widget';
 import { IKeybindingService } from 'vs/platform/keybinding/common/keybinding';
-import { ICodeEditor, IOverlayWidget, IOverlayWidgetPosition, OverlayWidgetPositionPreference } from 'vs/editor/browser/editorBrowser';
+import { ICodeEditor, IOverlayWidget, IOverlayWidgetPosition, IViewZone, OverlayWidgetPositionPreference } from 'vs/editor/browser/editorBrowser';
 import { FIND_IDS, MATCHES_LIMIT } from 'vs/editor/contrib/find/common/findModel';
 import { FindReplaceState, FindReplaceStateChangedEvent } from 'vs/editor/contrib/find/common/findState';
 import { Range } from 'vs/editor/common/core/range';
@@ -51,6 +51,23 @@ const NLS_NO_RESULTS = nls.localize('label.noResults', "No Results");
 let MAX_MATCHES_COUNT_WIDTH = 69;
 const WIDGET_FIXED_WIDTH = 411 - 69;
 
+export class DockFindViewZone implements IViewZone {
+
+	public afterLineNumber: number;
+	public heightInPx: number;
+	public suppressMouseDown: boolean;
+	public domNode: HTMLElement;
+
+	constructor(afterLineNumber: number) {
+		this.afterLineNumber = afterLineNumber;
+
+		this.heightInPx = 34;
+		this.suppressMouseDown = false;
+		this.domNode = document.createElement('div');
+		this.domNode.className = 'dock-find-widget';
+	}
+}
+
 export class FindWidget extends Widget implements IOverlayWidget {
 
 	private static ID = 'editor.contrib.findWidget';
@@ -67,6 +84,8 @@ export class FindWidget extends Widget implements IOverlayWidget {
 	private _domNode: HTMLElement;
 	private _findInput: FindInput;
 	private _replaceInputBox: InputBox;
+	private _findPartActions: HTMLElement;
+	private _replacePartActions: HTMLElement;
 
 	private _toggleReplaceBtn: SimpleButton;
 	private _matchesCount: HTMLElement;
@@ -82,6 +101,9 @@ export class FindWidget extends Widget implements IOverlayWidget {
 
 	private _focusTracker: dom.IFocusTracker;
 	private _findInputFocussed: IContextKey<boolean>;
+	private _viewZone: DockFindViewZone;
+	private _viewZoneId: number;
+	private _findWidgetPosition: 'default' | 'top' | 'bottom';
 
 	constructor(
 		codeEditor: ICodeEditor,
@@ -107,6 +129,28 @@ export class FindWidget extends Widget implements IOverlayWidget {
 		this._buildDomNode();
 		this._updateButtons();
 
+		let checkFindWidgetPosition = () => {
+			this._findWidgetPosition = this._codeEditor.getConfiguration().contribInfo.findWidget;
+			switch (this._findWidgetPosition) {
+				case 'default':
+					dom.toggleClass(this._domNode, 'dock', false);
+					dom.toggleClass(this._domNode, 'top', false);
+					dom.toggleClass(this._domNode, 'bottom', false);
+					break;
+				case 'top':
+					dom.toggleClass(this._domNode, 'dock', true);
+					dom.toggleClass(this._domNode, 'top', true);
+					break;
+				case 'bottom':
+					dom.toggleClass(this._domNode, 'dock', true);
+					dom.toggleClass(this._domNode, 'bottom', true);
+					break;
+				default:
+					break;
+			}
+		};
+		checkFindWidgetPosition();
+
 		let checkEditorWidth = () => {
 			let editorWidth = this._codeEditor.getConfiguration().layoutInfo.width;
 			let minimapWidth = this._codeEditor.getConfiguration().layoutInfo.minimapWidth;
@@ -125,6 +169,7 @@ export class FindWidget extends Widget implements IOverlayWidget {
 			dom.toggleClass(this._domNode, 'collapsed-find-widget', collapsedFindWidget);
 			dom.toggleClass(this._domNode, 'reduced-find-widget', reducedFindWidget);
 			dom.toggleClass(this._domNode, 'narrow-find-widget', narrowFindWidget);
+			this._replacePartActions.style.width = dom.getComputedStyle(this._findPartActions).width;
 		};
 		checkEditorWidth();
 
@@ -138,6 +183,10 @@ export class FindWidget extends Widget implements IOverlayWidget {
 			}
 			if (e.layoutInfo) {
 				checkEditorWidth();
+			}
+			if (e.contribInfo) {
+				checkFindWidgetPosition();
+				this._showViewZone();
 			}
 		}));
 		this._register(this._codeEditor.onDidChangeCursorSelection(() => {
@@ -169,9 +218,14 @@ export class FindWidget extends Widget implements IOverlayWidget {
 		});
 
 		this._codeEditor.addOverlayWidget(this);
+		this._viewZone = new DockFindViewZone(0);
 
 		this._applyTheme(themeService.getTheme());
 		this._register(themeService.onThemeChange(this._applyTheme.bind(this)));
+
+		this._register(this._codeEditor.onDidChangeModel((e) => {
+			this._showViewZone();
+		}));
 	}
 
 	// ----- IOverlayWidget API
@@ -186,9 +240,16 @@ export class FindWidget extends Widget implements IOverlayWidget {
 
 	public getPosition(): IOverlayWidgetPosition {
 		if (this._isVisible) {
-			return {
-				preference: OverlayWidgetPositionPreference.TOP_RIGHT_CORNER
-			};
+			if (this._findWidgetPosition === 'bottom') {
+				return {
+					preference: OverlayWidgetPositionPreference.BOTTOM_STICK,
+					reRender: true
+				};
+			} else {
+				return {
+					preference: OverlayWidgetPositionPreference.TOP_RIGHT_CORNER
+				};
+			}
 		}
 		return null;
 	}
@@ -330,7 +391,7 @@ export class FindWidget extends Widget implements IOverlayWidget {
 					}, 200);
 				}
 			}, 0);
-			this._codeEditor.layoutOverlayWidget(this);
+			this._showViewZone();
 		}
 	}
 
@@ -344,8 +405,44 @@ export class FindWidget extends Widget implements IOverlayWidget {
 			if (focusTheEditor) {
 				this._codeEditor.focus();
 			}
-			this._codeEditor.layoutOverlayWidget(this);
+			this._hideViewZone();
 		}
+	}
+
+	private _showViewZone() {
+		if (!this._isVisible) {
+			return;
+		}
+
+		if (this._findWidgetPosition === 'top' || this._findWidgetPosition === 'bottom') {
+			this._codeEditor.changeViewZones((accessor) => {
+				if (this._state.isReplaceRevealed) {
+					this._viewZone.heightInPx = 64;
+				} else {
+					this._viewZone.heightInPx = 34;
+				}
+				if (this._findWidgetPosition === 'bottom') {
+					this._viewZone.afterLineNumber = this._codeEditor.getModel().getLineCount();
+				} else {
+					this._viewZone.afterLineNumber = 0;
+				}
+				accessor.removeZone(this._viewZoneId);
+				this._viewZoneId = accessor.addZone(this._viewZone);
+			});
+		}
+		this._codeEditor.layoutOverlayWidget(this);
+	}
+
+	private _hideViewZone() {
+		if (this._findWidgetPosition === 'top' || this._findWidgetPosition === 'bottom') {
+			this._codeEditor.changeViewZones((accessor) => {
+				if (this._viewZoneId !== undefined) {
+					accessor.removeZone(this._viewZoneId);
+					this._viewZoneId = undefined;
+				}
+			});
+		}
+		this._codeEditor.layoutOverlayWidget(this);
 	}
 
 	private _applyTheme(theme: ITheme) {
@@ -533,13 +630,16 @@ export class FindWidget extends Widget implements IOverlayWidget {
 		let findPart = document.createElement('div');
 		findPart.className = 'find-part';
 		findPart.appendChild(this._findInput.domNode);
-		findPart.appendChild(this._matchesCount);
-		findPart.appendChild(this._prevBtn.domNode);
-		findPart.appendChild(this._nextBtn.domNode);
+		this._findPartActions = document.createElement('div');
+		this._findPartActions.className = 'find-part-actions';
+		this._findPartActions.appendChild(this._matchesCount);
+		this._findPartActions.appendChild(this._prevBtn.domNode);
+		this._findPartActions.appendChild(this._nextBtn.domNode);
+		findPart.appendChild(this._findPartActions);
 
 		// Toggle selection button
 		this._toggleSelectionFind = this._register(new SimpleCheckbox({
-			parent: findPart,
+			parent: this._findPartActions,
 			title: NLS_TOGGLE_SELECTION_FIND_TITLE + this._keybindingLabelFor(FIND_IDS.ToggleSearchScopeCommand),
 			onChange: () => {
 				if (this._toggleSelectionFind.checked) {
@@ -577,7 +677,7 @@ export class FindWidget extends Widget implements IOverlayWidget {
 			}
 		}));
 
-		findPart.appendChild(this._closeBtn.domNode);
+		this._findPartActions.appendChild(this._closeBtn.domNode);
 
 		return findPart;
 	}
@@ -625,8 +725,11 @@ export class FindWidget extends Widget implements IOverlayWidget {
 		let replacePart = document.createElement('div');
 		replacePart.className = 'replace-part';
 		replacePart.appendChild(replaceInput);
-		replacePart.appendChild(this._replaceBtn.domNode);
-		replacePart.appendChild(this._replaceAllBtn.domNode);
+		this._replacePartActions = document.createElement('div');
+		this._replacePartActions.className = 'replace-part-actions';
+		this._replacePartActions.appendChild(this._replaceBtn.domNode);
+		this._replacePartActions.appendChild(this._replaceAllBtn.domNode);
+		replacePart.appendChild(this._replacePartActions);
 
 		return replacePart;
 	}
@@ -644,6 +747,10 @@ export class FindWidget extends Widget implements IOverlayWidget {
 			className: 'toggle left',
 			onTrigger: () => {
 				this._state.change({ isReplaceRevealed: !this._isReplaceVisible }, false);
+				if (this._isReplaceVisible) {
+					this._replacePartActions.style.width = dom.getComputedStyle(this._findPartActions).width;
+				}
+				this._showViewZone();
 			},
 			onKeyDown: (e) => { }
 		}));

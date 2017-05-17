@@ -99,6 +99,16 @@
 	vertical-align: middle;
 }
 
+.monaco-editor .find-widget .find-part-actions {
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.monaco-editor .find-widget .replace-part-actions {
+	display: inline-block;
+	vertical-align: middle;
+}
+
 .monaco-editor .find-widget .matchesCount {
 	display: inline-block;
 	margin: 0 1px 0 3px;
@@ -338,4 +348,98 @@
 
 .monaco-editor.hc-black .find-widget .monaco-checkbox .checkbox:checked + .label {
 	background-color: rgba(255, 255, 255, 0.1);
+}
+
+.monaco-editor .find-widget.dock {
+	display: flex;
+	flex-direction: column;
+	right: 0 !important;
+	left: 0;
+	box-shadow: none;
+}
+
+.monaco-editor .find-widget.dock.replaceToggled > .replace-part {
+	display: flex;
+	flex: 1;
+	margin: 3px 0 0 17px;
+}
+
+.monaco-editor .find-widget.dock > .find-part  {
+	display: flex;
+	flex: 1;
+	align-items: center;
+}
+
+.monaco-editor .find-widget.dock .monaco-findInput {
+	display: flex;
+	flex: 1;
+}
+
+.monaco-editor .find-widget.dock .find-part-actions {
+	display: flex;
+	flex: initial;
+}
+
+.monaco-editor .find-widget.dock .replace-part-actions {
+	display: flex;
+	flex: initial;
+}
+
+.monaco-editor .find-widget.dock .matchesCount {
+	display: flex;
+	flex: initial;
+	align-self: center;
+}
+
+.monaco-editor .find-widget.dock .button {
+	display: flex;
+	flex: initial;
+	align-self: center;
+}
+
+.monaco-editor .find-widget.dock .monaco-checkbox {
+	display: flex;
+	flex: initial;
+	align-self: center;
+}
+
+.monaco-editor .find-widget.dock > .replace-part > .replace-input {
+	display: flex;
+	flex: 1;
+	vertical-align: middle;
+}
+
+.monaco-editor .find-widget.dock .monaco-inputbox .input {
+	width: 100% !important;
+}
+
+.monaco-editor .find-widget.dock .find-part .monaco-inputbox .input {
+	padding-right: 66px;
+}
+.monaco-editor .find-widget.dock.collapsed-find-widget .find-part .monaco-inputbox .input {
+	padding-right: 0px;
+}
+
+.monaco-editor .find-widget.dock.narrow-find-widget > .find-part .monaco-inputbox > .wrapper > .input {
+    width: 100% !important;
+}
+
+.monaco-editor .find-widget.dock.top {
+	border-bottom-width: 1px;
+    border-bottom-style: solid;
+	border-bottom-color: rgba(128, 128, 128, 0.34902);
+}
+
+.monaco-editor .find-widget.dock.bottom {
+	border-top-width: 1px;
+    border-top-style: solid;
+	border-top-color: rgba(128, 128, 128, 0.34902);
+}
+
+.monaco-editor .find-widget.dock.bottom {
+	-webkit-transition: none;
+	-o-transition: none;
+	-moz-transition: none;
+	-ms-transition: none;
+	transition: none;
 }

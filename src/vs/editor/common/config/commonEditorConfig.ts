@@ -383,6 +383,12 @@ const editorConfiguration: IConfigurationNode = {
 			'default': EDITOR_DEFAULTS.contribInfo.snippetSuggestions,
 			'description': nls.localize('snippetSuggestions', "Controls whether snippets are shown with other suggestions and how they are sorted.")
 		},
+		'editor.findWidget': {
+			'type': 'string',
+			'enum': ['default', 'top', 'bottom'],
+			'default': EDITOR_DEFAULTS.contribInfo.findWidget,
+			'description': nls.localize('findWidget', "Controls where find widget is shown")
+		},
 		'editor.emptySelectionClipboard': {
 			'type': 'boolean',
 			'default': EDITOR_DEFAULTS.contribInfo.emptySelectionClipboard,

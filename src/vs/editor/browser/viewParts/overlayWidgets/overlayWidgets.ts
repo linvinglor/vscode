@@ -91,9 +91,9 @@ export class ViewOverlayWidgets extends ViewPart {
 		this.setShouldRender();
 	}
 
-	public setWidgetPosition(widget: IOverlayWidget, preference: OverlayWidgetPositionPreference): boolean {
+	public setWidgetPosition(widget: IOverlayWidget, preference: OverlayWidgetPositionPreference, forceRender?: boolean): boolean {
 		let widgetData = this._widgets[widget.getId()];
-		if (widgetData.preference === preference) {
+		if (widgetData.preference === preference && !forceRender) {
 			return false;
 		}
 
@@ -133,6 +133,11 @@ export class ViewOverlayWidgets extends ViewPart {
 		} else if (widgetData.preference === OverlayWidgetPositionPreference.TOP_CENTER) {
 			domNode.setTop(0);
 			domNode.domNode.style.right = '50%';
+		} else if(widgetData.preference === OverlayWidgetPositionPreference.BOTTOM_STICK) {
+			let widgetHeight = domNode.domNode.clientHeight;
+			let wordwrap = this._context.configuration.editor.wrappingInfo.isViewportWrapping;
+			domNode.setTop((this._editorHeight - widgetHeight - (wordwrap ? 1 : 0 ) * this._horizontalScrollbarHeight));
+			domNode.setRight((2 * this._verticalScrollbarWidth) + this._minimapWidth);
 		}
 	}
 

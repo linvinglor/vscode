@@ -2940,6 +2940,10 @@ declare module monaco.editor {
 		 */
 		snippetSuggestions?: 'top' | 'bottom' | 'inline' | 'none';
 		/**
+		 * Control where the findWidget is shown;
+		 */
+		findWidget?: 'default' | 'top' | 'bottom';
+		/**
 		 * Copying without a selection copies the current line.
 		 */
 		emptySelectionClipboard?: boolean;
@@ -3232,6 +3236,7 @@ declare module monaco.editor {
 		readonly acceptSuggestionOnEnter: boolean;
 		readonly acceptSuggestionOnCommitCharacter: boolean;
 		readonly snippetSuggestions: 'top' | 'bottom' | 'inline' | 'none';
+		readonly findWidget: 'default' | 'top' | 'bottom';
 		readonly emptySelectionClipboard: boolean;
 		readonly wordBasedSuggestions: boolean;
 		readonly suggestFontSize: number;
@@ -3541,6 +3546,10 @@ declare module monaco.editor {
 		 * Position the overlay widget in the top center
 		 */
 		TOP_CENTER = 2,
+		/**
+		 * Position the overlay widget in the top center
+		 */
+		BOTTOM_STICK = 3,
 	}
 
 	/**
@@ -3551,6 +3560,7 @@ declare module monaco.editor {
 		 * The position preference for the overlay widget.
 		 */
 		preference: OverlayWidgetPositionPreference;
+		reRender?: boolean;
 	}
 
 	/**
