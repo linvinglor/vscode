@@ -59,6 +59,26 @@
                     },
                     "default": {},
                     "description": "Applicable only when emmet.useNewEmmet is set to true.\nVariables to be used in emmet snippets"
+                },
+                "emmet.syntaxProfiles": {
+                    "type": "object",
+                    "default": {},
+                    "description": "%emmetSyntaxProfiles%"
+                },
+                "emmet.excludeLanguages": {
+                    "type": "array",
+                    "default": ["markdown"],
+                    "description": "%emmetExclude%"
+                },
+                "emmet.extensionsPath": {
+                    "type": "string",
+                    "default": null,
+                    "description": "%emmetExtensionsPath%"
+                },
+                "emmet.useNewEmmet": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Try out the new emmet modules (which will eventually replace the old single emmet library) for all emmet features."
                 }
             }
         },
