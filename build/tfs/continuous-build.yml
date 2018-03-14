@@ -1,3 +1,4 @@
+phases:
 - phase: Linux
   queue: Hosted Linux Preview
   steps:
