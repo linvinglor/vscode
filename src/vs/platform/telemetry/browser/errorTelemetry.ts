@@ -12,6 +12,24 @@ import { IDisposable, toDisposable, dispose } from 'vs/base/common/lifecycle';
 import * as Errors from 'vs/base/common/errors';
 import { safeStringify } from 'vs/base/common/objects';
 
+
+/* __GDPR__FRAGMENT__
+	"ErrorNameAndMessage" : {
+		"message" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
+		"name": { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" }
+	}
+ */
+/* __GDPR__FRAGMENT__
+	"ErrorEvent" : {
+		"stack": { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
+		"message" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
+		"filename" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
+		"line": { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth", "isMeasurement": true },
+		"column": { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth", "isMeasurement": true },
+		"error" : { "${inline}": [ "${ErrorNameAndMessage}" ] },
+		"count": { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth", "isMeasurement": true }
+	}
+ */
 interface ErrorEvent {
 	stack: string;
 	message?: string;
@@ -145,17 +163,9 @@ export default class ErrorTelemetry {
 		for (let error of this._buffer) {
 			/* __GDPR__
 			"UnhandledError" : {
-					"filename" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
-					"message" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
-					"name": { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
-					"stack": { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
-					"id": { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
-					"line": { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth", "isMeasurement": true },
-					"column": { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth", "isMeasurement": true },
-					"count": { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth", "isMeasurement": true }
+					"${include}": [ "${ErrorEvent}" ]
 				}
 			*/
-			// __GDPR__TODO__ what's the complete set of properties?
 			this._telemetryService.publicLog('UnhandledError', error);
 		}
 		this._buffer.length = 0;

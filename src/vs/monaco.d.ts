@@ -1194,11 +1194,6 @@ declare namespace monaco.editor {
 		 */
 		isWholeLine?: boolean;
 		/**
-		 * Specifies the stack order of a decoration.
-		 * A decoration with greater stack order is always in front of a decoration with a lower stack order.
-		 */
-		zIndex?: number;
-		/**
 		 * If set, render this decoration in the overview ruler.
 		 */
 		overviewRuler?: IModelDecorationOverviewRulerOptions;
@@ -1488,10 +1483,6 @@ declare namespace monaco.editor {
 		 * Get the text for a certain line.
 		 */
 		getLineContent(lineNumber: number): string;
-		/**
-		 * Get the text length for a certain line.
-		 */
-		getLineLength(lineNumber: number): number;
 		/**
 		 * Get the text for all lines.
 		 */
@@ -1936,13 +1927,9 @@ declare namespace monaco.editor {
 	 * A (serializable) state of the view.
 	 */
 	export interface IViewState {
-		/** written by previous versions */
-		scrollTop?: number;
-		/** written by previous versions */
-		scrollTopWithoutViewZones?: number;
+		scrollTop: number;
+		scrollTopWithoutViewZones: number;
 		scrollLeft: number;
-		firstPosition: IPosition;
-		firstPositionDeltaTop: number;
 	}
 
 	/**
@@ -2702,11 +2689,6 @@ declare namespace monaco.editor {
 		 */
 		multiCursorModifier?: 'ctrlCmd' | 'alt';
 		/**
-		 * Merge overlapping selections.
-		 * Defaults to true
-		 */
-		multiCursorMergeOverlapping?: boolean;
-		/**
 		 * Configure the editor's accessibility support.
 		 * Defaults to 'auto'. It is best to leave this to 'auto'.
 		 */
@@ -2824,11 +2806,6 @@ declare namespace monaco.editor {
 		 * Defaults to true.
 		 */
 		folding?: boolean;
-		/**
-		 * Selects the folding strategy. 'auto' uses the strategies contributed for the current document, 'indentation' uses the indentation based folding strategy.
-		 * Defaults to 'auto'.
-		 */
-		foldingStrategy?: 'auto' | 'indentation';
 		/**
 		 * Controls whether the fold actions in the gutter stay always visible or hide unless the mouse is over the gutter.
 		 * Defaults to 'mouseover'.
@@ -3108,7 +3085,6 @@ declare namespace monaco.editor {
 		readonly occurrencesHighlight: boolean;
 		readonly codeLens: boolean;
 		readonly folding: boolean;
-		readonly foldingStrategy: 'auto' | 'indentation';
 		readonly showFoldingControls: 'always' | 'mouseover';
 		readonly matchBrackets: boolean;
 		readonly find: InternalEditorFindOptions;
@@ -3127,7 +3103,6 @@ declare namespace monaco.editor {
 		readonly lineHeight: number;
 		readonly readOnly: boolean;
 		readonly multiCursorModifier: 'altKey' | 'ctrlKey' | 'metaKey';
-		readonly multiCursorMergeOverlapping: boolean;
 		readonly wordSeparators: string;
 		readonly autoClosingBrackets: boolean;
 		readonly autoIndent: boolean;
@@ -3265,7 +3240,6 @@ declare namespace monaco.editor {
 		readonly readOnly: boolean;
 		readonly accessibilitySupport: boolean;
 		readonly multiCursorModifier: boolean;
-		readonly multiCursorMergeOverlapping: boolean;
 		readonly wordSeparators: boolean;
 		readonly autoClosingBrackets: boolean;
 		readonly autoIndent: boolean;
@@ -5026,6 +5000,21 @@ declare namespace monaco.languages {
 		title: string;
 		tooltip?: string;
 		arguments?: any[];
+	}
+
+	export interface CommentThread {
+		readonly range: IRange;
+		readonly comments: Comment[];
+	}
+
+	export interface Comment {
+		readonly body: IMarkdownString;
+		readonly userName: string;
+		readonly gravatar: string;
+	}
+
+	export interface CommentProvider {
+		provideComments(model: editor.ITextModel, token: CancellationToken): CommentThread[];
 	}
 
 	export interface ICodeLensSymbol {
