@@ -35,12 +35,14 @@ namespace TaskExecutionDTO {
 	export function from(value: TaskExecution): TaskExecutionDTO {
 		return {
 			id: value.id,
+			processId: value.processId,
 			task: TaskDTO.from(value.task)
 		};
 	}
 	export function to(value: TaskExecutionDTO, workspace: IWorkspaceContextService): TaskExecution {
 		return {
 			id: value.id,
+			processId: value.processId,
 			task: TaskDTO.to(value.task, workspace)
 		};
 	}
@@ -388,7 +390,7 @@ export class MainThreadTask implements MainThreadTaskShape {
 	}
 
 	public $executeTaskProvider(): TPromise<TaskDTO[]> {
-		return this._taskService.tasks().then((tasks) => {
+		return this._taskService.tasks({ version: '2' }).then((tasks) => {
 			let result: TaskDTO[] = [];
 			for (let task of tasks) {
 				let item = TaskDTO.from(task);

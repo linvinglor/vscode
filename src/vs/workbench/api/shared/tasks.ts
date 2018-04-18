@@ -85,5 +85,6 @@ export interface TaskDTO {
 
 export interface TaskExecutionDTO {
 	id: string;
+	processId: number;
 	task: TaskDTO;
 }

@@ -32,20 +32,32 @@ export interface CustomizationProperties {
 	isBackground?: boolean;
 }
 
+export interface TaskFilter {
+	version?: '1' | '2';
+	type?: string;
+}
+
+export interface RunResult {
+	promise: TPromise<ITaskSummary>;
+	processInfo: {
+		processId: number;
+	};
+}
+
 export interface ITaskService {
 	_serviceBrand: any;
 	onDidStateChange: Event<TaskEvent>;
 	configureAction(): Action;
 	build(): TPromise<ITaskSummary>;
 	runTest(): TPromise<ITaskSummary>;
-	run(task: Task, options?: RunOptions): TPromise<ITaskSummary>;
+	run(task: Task, options?: RunOptions): RunResult;
 	inTerminal(): boolean;
 	isActive(): TPromise<boolean>;
 	getActiveTasks(): TPromise<Task[]>;
 	restart(task: Task): void;
 	terminate(task: Task): TPromise<TaskTerminateResponse>;
 	terminateAll(): TPromise<TaskTerminateResponse[]>;
-	tasks(): TPromise<Task[]>;
+	tasks(filter?: TaskFilter): TPromise<Task[]>;
 	/**
 	 * @param alias The task's name, label or defined identifier.
 	 */

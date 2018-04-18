@@ -140,7 +140,7 @@ export class TerminalTaskSystem implements ITaskSystem {
 				this.terminalService.setActiveInstance(terminalData.terminal);
 				this.terminalService.showPanel(focus);
 			}
-			return { kind: TaskExecuteKind.Active, active: { same: true, background: task.isBackground }, promise: terminalData.promise };
+			return { kind: TaskExecuteKind.Active, active: { same: true, background: task.isBackground }, processId: terminalData.terminal.processId, promise: terminalData.promise };
 		}
 
 		try {

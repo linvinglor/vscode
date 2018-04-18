@@ -676,11 +676,15 @@ namespace TaskDTO {
 }
 
 class TaskExecutionImpl implements vscode.TaskExecution {
-	constructor(readonly _id: string, private readonly _task: vscode.Task, private readonly _tasks: ExtHostTask) {
+	constructor(readonly _id: string, private _processId: number, private readonly _task: vscode.Task, private readonly _tasks: ExtHostTask) {
 	}
 
 	get task(): vscode.Task {
 		return this._task;
+	}
+
+	get processId(): number {
+		return this._processId;
 	}
 
 	public terminate(): void {
@@ -690,11 +694,12 @@ class TaskExecutionImpl implements vscode.TaskExecution {
 
 namespace TaskExecutionDTO {
 	export function to(value: TaskExecutionDTO, tasks: ExtHostTask): vscode.TaskExecution {
-		return new TaskExecutionImpl(value.id, TaskDTO.to(value.task, tasks.extHostWorkspace), tasks);
+		return new TaskExecutionImpl(value.id, value.processId, TaskDTO.to(value.task, tasks.extHostWorkspace), tasks);
 	}
 	export function from(value: vscode.TaskExecution): TaskExecutionDTO {
 		return {
 			id: (value as TaskExecutionImpl)._id,
+			processId: value.processId,
 			task: undefined
 		};
 	}
@@ -774,6 +779,12 @@ export class ExtHostTask implements ExtHostTaskShape {
 		});
 	}
 
+	get taskExecutions(): vscode.TaskExecution[] {
+		let result: vscode.TaskExecution[] = [];
+		this._taskExecutions.forEach(value => result.push(value));
+		return result;
+	}
+
 	get onDidStartTask(): Event<vscode.TaskStartEvent> {
 		return this._onDidExecuteTask.event;
 	}
@@ -820,7 +831,7 @@ export class ExtHostTask implements ExtHostTaskShape {
 		if (result) {
 			return result;
 		}
-		result = new TaskExecutionImpl(execution.id, task ? task : TaskDTO.to(execution.task, this._extHostWorkspace), this);
+		result = new TaskExecutionImpl(execution.id, execution.processId, task ? task : TaskDTO.to(execution.task, this._extHostWorkspace), this);
 		this._taskExecutions.set(execution.id, result);
 		return result;
 	}

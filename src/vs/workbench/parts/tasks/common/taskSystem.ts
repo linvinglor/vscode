@@ -84,6 +84,7 @@ export enum TaskExecuteKind {
 export interface ITaskExecuteResult {
 	kind: TaskExecuteKind;
 	promise: TPromise<ITaskSummary>;
+	processId: number;
 	started?: {
 		restartOnFileChanges?: string;
 	};

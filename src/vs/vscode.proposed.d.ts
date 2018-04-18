@@ -242,9 +242,9 @@ declare module 'vscode' {
 		readonly onDidChangeFile: Event<FileChange2[]>;
 
 		/**
-		 * Subscribe to events in the file or folder denoted by `uri`. 
-		 * @param uri 
-		 * @param options 
+		 * Subscribe to events in the file or folder denoted by `uri`.
+		 * @param uri
+		 * @param options
 		 */
 		watch(uri: Uri, options: { recursive?: boolean; excludes?: string[] }): Disposable;
 
@@ -269,7 +269,7 @@ declare module 'vscode' {
 
 		/**
 		 * Create a new directory. *Note* that new files are created via `write`-calls.
-		 * 
+		 *
 		 * @param uri The uri of the *new* folder.
 		 * @param token A cancellation token.
 		 */
@@ -789,6 +789,11 @@ declare module 'vscode' {
 		task: Task;
 
 		/**
+		 * The id of the process executing the task.
+		 */
+		processId: number;
+
+		/**
 		 * Terminates the task execution.
 		 */
 		terminate(): void;
@@ -834,6 +839,13 @@ declare module 'vscode' {
 		 * @param task the task to execute
 		 */
 		export function executeTask(task: Task): Thenable<TaskExecution>;
+
+		/**
+		 * The currently active task executions or an empty array.
+		 *
+		 * @readonly
+		 */
+		export let taskExecutions: TaskExecution[];
 
 		/**
 		 * Fires when a task starts.
