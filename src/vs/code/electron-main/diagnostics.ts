@@ -16,20 +16,11 @@ import { repeat, pad } from 'vs/base/common/strings';
 import { isWindows } from 'vs/base/common/platform';
 import { app } from 'electron';
 import { basename } from 'path';
+import { SystemInfo } from 'vs/platform/issue/common/issue';
 
 export interface VersionInfo {
 	vscodeVersion: string;
 	os: string;
-}
-
-export interface SystemInfo {
-	CPUs?: string;
-	'Memory (System)': string;
-	'Load (avg)'?: string;
-	VM: string;
-	'Screen Reader': string;
-	'Process Argv': string;
-	'GPU Status': Electron.GPUFeatureStatus;
 }
 
 export interface ProcessInfo {

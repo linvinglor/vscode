@@ -9,10 +9,10 @@ import { TPromise, Promise } from 'vs/base/common/winjs.base';
 import { localize } from 'vs/nls';
 import * as objects from 'vs/base/common/objects';
 import { parseArgs } from 'vs/platform/environment/node/argv';
-import { IIssueService, IssueReporterData, IssueReporterFeatures, ProcessExplorerData } from 'vs/platform/issue/common/issue';
+import { IIssueService, IssueReporterData, IssueReporterFeatures, ProcessExplorerData, SystemInfo } from 'vs/platform/issue/common/issue';
 import { BrowserWindow, ipcMain, screen } from 'electron';
 import { ILaunchService } from 'vs/code/electron-main/launch';
-import { getPerformanceInfo, PerformanceInfo, getSystemInfo, SystemInfo } from 'vs/code/electron-main/diagnostics';
+import { getPerformanceInfo, PerformanceInfo, getSystemInfo } from 'vs/code/electron-main/diagnostics';
 import { IEnvironmentService } from 'vs/platform/environment/common/environment';
 import { isMacintosh, IProcessEnvironment } from 'vs/base/common/platform';
 import { ILogService } from 'vs/platform/log/common/log';
@@ -34,8 +34,9 @@ export class IssueService implements IIssueService {
 	) { }
 
 	openReporter(data: IssueReporterData): TPromise<void> {
+		// TODO: We don't need this anymore?
 		ipcMain.on('issueSystemInfoRequest', event => {
-			this.getSystemInformation().then(msg => {
+			this.getSystemInfo().then(msg => {
 				event.sender.send('issueSystemInfoResponse', msg);
 			});
 		});
@@ -197,7 +198,7 @@ export class IssueService implements IIssueService {
 		return state;
 	}
 
-	private getSystemInformation(): TPromise<SystemInfo> {
+	public getSystemInfo(): TPromise<SystemInfo> {
 		return new Promise((resolve, reject) => {
 			this.launchService.getMainProcessInfo().then(info => {
 				resolve(getSystemInfo(info));

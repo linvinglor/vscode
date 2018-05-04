@@ -7,7 +7,7 @@
 
 import { TPromise } from 'vs/base/common/winjs.base';
 import { IChannel } from 'vs/base/parts/ipc/common/ipc';
-import { IIssueService, IssueReporterData, ProcessExplorerData } from './issue';
+import { IIssueService, IssueReporterData, ProcessExplorerData, SystemInfo } from 'vs/platform/issue/common/issue';
 
 export interface IIssueChannel extends IChannel {
 	call(command: 'openIssueReporter', arg: IssueReporterData): TPromise<void>;
@@ -25,6 +25,8 @@ export class IssueChannel implements IIssueChannel {
 				return this.service.openReporter(arg);
 			case 'openProcessExplorer':
 				return this.service.openProcessExplorer(arg);
+			case 'getSystemInfo':
+				return this.service.getSystemInfo();
 		}
 		return undefined;
 	}
@@ -42,5 +44,9 @@ export class IssueChannelClient implements IIssueService {
 
 	openProcessExplorer(data: ProcessExplorerData): TPromise<void> {
 		return this.channel.call('openProcessExplorer', data);
+	}
+
+	getSystemInfo(): TPromise<SystemInfo> {
+		return this.channel.call('getSystemInfo');
 	}
 }

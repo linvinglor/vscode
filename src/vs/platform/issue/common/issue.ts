@@ -78,4 +78,75 @@ export interface IIssueService {
 	_serviceBrand: any;
 	openReporter(data: IssueReporterData): TPromise<void>;
 	openProcessExplorer(data: ProcessExplorerData): TPromise<void>;
+	// TODO: getSystemInfo would make more sense in a diagnostics-related service
+	getSystemInfo(): TPromise<SystemInfo>;
+}
+
+// This interface is copied from Electron to prevent a layer issue
+export interface GPUFeatureStatus {
+
+	// Docs: http://electron.atom.io/docs/api/structures/gpu-feature-status
+
+	/**
+	 * Canvas
+	 */
+	'2d_canvas': string;
+	/**
+	 * Flash
+	 */
+	flash_3d: string;
+	/**
+	 * Flash Stage3D
+	 */
+	flash_stage3d: string;
+	/**
+	 * Flash Stage3D Baseline profile
+	 */
+	flash_stage3d_baseline: string;
+	/**
+	 * Compositing
+	 */
+	gpu_compositing: string;
+	/**
+	 * Multiple Raster Threads
+	 */
+	multiple_raster_threads: string;
+	/**
+	 * Native GpuMemoryBuffers
+	 */
+	native_gpu_memory_buffers: string;
+	/**
+	 * Rasterization
+	 */
+	rasterization: string;
+	/**
+	 * Video Decode
+	 */
+	video_decode: string;
+	/**
+	 * Video Encode
+	 */
+	video_encode: string;
+	/**
+	 * VPx Video Decode
+	 */
+	vpx_decode: string;
+	/**
+	 * WebGL
+	 */
+	webgl: string;
+	/**
+	 * WebGL2
+	 */
+	webgl2: string;
+}
+
+export interface SystemInfo {
+	CPUs?: string;
+	'Memory (System)': string;
+	'Load (avg)'?: string;
+	VM: string;
+	'Screen Reader': string;
+	'Process Argv': string;
+	'GPU Status': GPUFeatureStatus;
 }

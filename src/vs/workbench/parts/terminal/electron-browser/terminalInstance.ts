@@ -33,6 +33,7 @@ import { INotificationService } from 'vs/platform/notification/common/notificati
 import { ILogService } from 'vs/platform/log/common/log';
 import { TerminalCommandTracker } from 'vs/workbench/parts/terminal/node/terminalCommandTracker';
 import { TerminalProcessManager } from './terminalProcessManager';
+import { IIssueService } from 'vs/platform/issue/common/issue';
 
 let Terminal: typeof XTermTerminal;
 
@@ -107,7 +108,8 @@ export class TerminalInstance implements ITerminalInstance {
 		@IClipboardService private readonly _clipboardService: IClipboardService,
 		@IThemeService private readonly _themeService: IThemeService,
 		@IConfigurationService private readonly _configurationService: IConfigurationService,
-		@ILogService private _logService: ILogService
+		@ILogService private _logService: ILogService,
+		@IIssueService private _issueService: IIssueService
 	) {
 		this._disposables = [];
 		this._skipTerminalCommands = [];
@@ -249,6 +251,11 @@ export class TerminalInstance implements ITerminalInstance {
 		}
 		const accessibilitySupport = this._configurationService.getValue<IEditorOptions>('editor').accessibilitySupport;
 		const font = this._configHelper.getFont(undefined, true);
+
+		console.log('request sys info');
+		const info = await this._issueService.getSystemInfo();
+		console.log('info', info);
+
 		this._xterm = new Terminal({
 			scrollback: this._configHelper.config.scrollback,
 			theme: this._getXtermTheme(),
@@ -260,7 +267,8 @@ export class TerminalInstance implements ITerminalInstance {
 			bellStyle: this._configHelper.config.enableBell ? 'sound' : 'none',
 			screenReaderMode: accessibilitySupport === 'on',
 			macOptionIsMeta: this._configHelper.config.macOptionIsMeta,
-			rightClickSelectsWord: this._configHelper.config.rightClickBehavior === 'selectWord'
+			rightClickSelectsWord: this._configHelper.config.rightClickBehavior === 'selectWord',
+			rendererType: 'dom'
 		});
 		if (this._shellLaunchConfig.initialText) {
 			this._xterm.writeln(this._shellLaunchConfig.initialText);
@@ -878,7 +886,9 @@ export class TerminalInstance implements ITerminalInstance {
 				// is to fix an issue where dragging the window to the top of the screen to maximize
 				// on Winodws/Linux would fire an event saying that the terminal was not visible.
 				// This should only force a refresh if one is needed.
-				(<any>this._xterm).renderer.onIntersectionChange({ intersectionRatio: 1 });
+				if (this._xterm.getOption('rendererType') === 'canvas') {
+					(<any>this._xterm).renderer.onIntersectionChange({ intersectionRatio: 1 });
+				}
 			}
 		}
 
