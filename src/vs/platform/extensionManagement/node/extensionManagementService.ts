@@ -233,13 +233,15 @@ export class ExtensionManagementService extends Disposable implements IExtension
 					if (extensionsToInstall.length > 1) {
 						this.onInstallExtensions(extensionsToInstall.slice(1));
 					}
-					return this.downloadAndInstallExtensions(extensionsToInstall)
-						.then(
-							locals => this.onDidInstallExtensions(extensionsToInstall, locals, [])
-								.then(() => locals.filter(l => areSameExtensions({ id: getGalleryExtensionIdFromLocal(l), uuid: l.identifier.uuid }, extension.identifier)[0])),
-							errors => this.onDidInstallExtensions(extensionsToInstall, [], errors));
+					return this.getInstalled(LocalExtensionType.User).then(existingExtensions => {
+						return this.downloadAndInstallExtensions(extensionsToInstall)
+							.then(
+								locals => this.onDidInstallExtensions(extensionsToInstall, locals, existingExtensions, [])
+									.then(() => locals.filter(l => areSameExtensions({ id: getGalleryExtensionIdFromLocal(l), uuid: l.identifier.uuid }, extension.identifier)[0])),
+								errors => this.onDidInstallExtensions(extensionsToInstall, [], existingExtensions, errors));
+					});
 				},
-				error => this.onDidInstallExtensions([extension], [], [error]));
+				error => this.onDidInstallExtensions([extension], [], [], [error]));
 	}
 
 	reinstallFromGallery(extension: ILocalExtension): TPromise<ILocalExtension> {
@@ -340,9 +342,10 @@ export class ExtensionManagementService extends Disposable implements IExtension
 		}
 	}
 
-	private onDidInstallExtensions(extensions: IGalleryExtension[], locals: ILocalExtension[], errors: Error[]): TPromise<any> {
+	private onDidInstallExtensions(extensions: IGalleryExtension[], locals: ILocalExtension[], existingExtensions: ILocalExtension[], errors: Error[]): TPromise<any> {
 		extensions.forEach((gallery, index) => {
 			const identifier = { id: getLocalExtensionIdFromGallery(gallery, gallery.version), uuid: gallery.identifier.uuid };
+			const eventName = existingExtensions.filter(x => x.identifier.id === identifier.id).length ? 'update' : 'install';
 			const local = locals[index];
 			const error = errors[index];
 			if (local) {
@@ -354,7 +357,7 @@ export class ExtensionManagementService extends Disposable implements IExtension
 				this._onDidInstallExtension.fire({ identifier, gallery, error: errorCode });
 			}
 			const startTime = this.installationStartTime.get(gallery.identifier.id);
-			this.reportTelemetry('extensionGallery:install', getGalleryExtensionTelemetryData(gallery), startTime ? new Date().getTime() - startTime : void 0, error);
+			this.reportTelemetry(`extensionGallery:${eventName}`, getGalleryExtensionTelemetryData(gallery), startTime ? new Date().getTime() - startTime : void 0, error);
 			this.installationStartTime.delete(gallery.identifier.id);
 		});
 		return errors.length ? TPromise.wrapError(this.joinErrors(errors)) : TPromise.as(null);
@@ -884,6 +887,16 @@ export class ExtensionManagementService extends Disposable implements IExtension
 		*/
 		/* __GDPR__
 			"extensionGallery:uninstall" : {
+				"success": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "isMeasurement": true },
+				"duration" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "isMeasurement": true },
+				"errorcode": { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
+				"${include}": [
+					"${GalleryExtensionTelemetryData}"
+				]
+			}
+		*/
+		/* __GDPR__
+			"extensionGallery:update" : {
 				"success": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "isMeasurement": true },
 				"duration" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "isMeasurement": true },
 				"errorcode": { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
