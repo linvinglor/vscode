@@ -52,7 +52,9 @@ export class AbstractProblemCollector implements IDisposable {
 	// [owner] -> [resource] -> [markerkey] -> markerData
 	private markers: Map<string, Map<string, Map<string, IMarkerData>>>;
 	// [owner] -> [resource] -> number;
-	private deliveredMarkers: Map<string, Map<string, number>>;
+	private reportedMarkers: Map<string, Map<string, number>>;
+	// ['open' | 'close'] -> [resource] -> IMarkerData[];
+	private unappliedMarkers: Map<'open' | 'close', Map<string, { owner: string; markers: IMarkerData[]; }>>;
 
 	protected _onDidStateChange: Emitter<ProblemCollectorEvent>;
 
@@ -88,12 +90,17 @@ export class AbstractProblemCollector implements IDisposable {
 		}
 		this.resourcesToClean = new Map<string, Map<string, URI>>();
 		this.markers = new Map<string, Map<string, Map<string, IMarkerData>>>();
-		this.deliveredMarkers = new Map<string, Map<string, number>>();
+		this.reportedMarkers = new Map<string, Map<string, number>>();
+		this.unappliedMarkers = new Map();
+		this.unappliedMarkers.set('open', new Map());
+		this.unappliedMarkers.set('close', new Map());
 		this.modelService.onModelAdded((model) => {
 			this.openModels[model.uri.toString()] = true;
+			this.refreshMarkers(model.uri, true);
 		}, this, this.modelListeners);
 		this.modelService.onModelRemoved((model) => {
 			delete this.openModels[model.uri.toString()];
+			this.refreshMarkers(model.uri, false);
 		}, this, this.modelListeners);
 		this.modelService.getModels().forEach(model => this.openModels[model.uri.toString()] = true);
 
@@ -144,14 +151,14 @@ export class AbstractProblemCollector implements IDisposable {
 		return result;
 	}
 
-	protected shouldApplyMatch(result: ProblemMatch): boolean {
-		switch (result.description.applyTo) {
+	protected shouldApplyMatch(resource: string, applyTo: ApplyToKind): boolean {
+		switch (applyTo) {
 			case ApplyToKind.allDocuments:
 				return true;
 			case ApplyToKind.openDocuments:
-				return !!this.openModels[result.resource.toString()];
+				return !!this.openModels[resource];
 			case ApplyToKind.closedDocuments:
-				return !this.openModels[result.resource.toString()];
+				return !this.openModels[resource];
 			default:
 				return true;
 		}
@@ -274,9 +281,9 @@ export class AbstractProblemCollector implements IDisposable {
 
 	protected reportMarkers(): void {
 		this.markers.forEach((markersPerOwner, owner) => {
-			let develieredMarkersPerOwner = this.getDeliveredMarkersPerOwner(owner);
+			let reportedMarkersPerOwner = this.getReportedMarkersPerOwner(owner);
 			markersPerOwner.forEach((markers, resource) => {
-				this.deliverMarkersPerOwnerAndResourceResolved(owner, resource, markers, develieredMarkersPerOwner);
+				this.deliverMarkersPerOwnerAndResourceResolved(owner, resource, markers, reportedMarkersPerOwner);
 			});
 		});
 	}
@@ -286,37 +293,54 @@ export class AbstractProblemCollector implements IDisposable {
 		if (!markersPerOwner) {
 			return;
 		}
-		let deliveredMarkersPerOwner = this.getDeliveredMarkersPerOwner(owner);
+		let reportedMarkersPerOwner = this.getReportedMarkersPerOwner(owner);
 		let markersPerResource = markersPerOwner.get(resource);
 		if (!markersPerResource) {
 			return;
 		}
-		this.deliverMarkersPerOwnerAndResourceResolved(owner, resource, markersPerResource, deliveredMarkersPerOwner);
+		this.deliverMarkersPerOwnerAndResourceResolved(owner, resource, markersPerResource, reportedMarkersPerOwner);
 	}
 
 	private deliverMarkersPerOwnerAndResourceResolved(owner: string, resource: string, markers: Map<string, IMarkerData>, reported: Map<string, number>): void {
+		let applyTo = this.applyToByOwner.get(owner);
+		let shouldApplyMatch = applyTo !== void 0 ? this.shouldApplyMatch(resource, applyTo) : true;
 		if (markers.size !== reported.get(resource)) {
 			let toSet: IMarkerData[] = [];
 			markers.forEach(value => toSet.push(value));
-			this.markerService.changeOne(owner, URI.parse(resource), toSet);
+			if (shouldApplyMatch) {
+				this.markerService.changeOne(owner, URI.parse(resource), toSet);
+			} else {
+				let key: 'open' | 'close' = applyTo === ApplyToKind.closedDocuments ? 'close' : 'open';
+				this.unappliedMarkers.get(key).set(resource, { owner, markers: toSet });
+			}
 			reported.set(resource, markers.size);
 		}
 	}
 
-	private getDeliveredMarkersPerOwner(owner: string): Map<string, number> {
-		let result = this.deliveredMarkers.get(owner);
+	private getReportedMarkersPerOwner(owner: string): Map<string, number> {
+		let result = this.reportedMarkers.get(owner);
 		if (!result) {
 			result = new Map<string, number>();
-			this.deliveredMarkers.set(owner, result);
+			this.reportedMarkers.set(owner, result);
 		}
 		return result;
+	}
+
+	private refreshMarkers(resource: URI, open: boolean): void {
+		let key: 'open' | 'close' = open ? 'open' : 'close';
+		let item = this.unappliedMarkers.get(key).get(resource.toString());
+		if (item) {
+			setTimeout(() => {
+				this.markerService.changeOne(item.owner, resource, item.markers);
+			}, 500);
+		}
 	}
 
 	protected cleanMarkerCaches(): void {
 		this._numberOfMatches = 0;
 		this._maxMarkerSeverity = undefined;
 		this.markers.clear();
-		this.deliveredMarkers.clear();
+		this.reportedMarkers.clear();
 	}
 
 	public done(): void {
@@ -355,16 +379,13 @@ export class StartStopProblemCollector extends AbstractProblemCollector implemen
 		let resource = markerMatch.resource;
 		let resourceAsString = resource.toString();
 		this.removeResourceToClean(owner, resourceAsString);
-		let shouldApplyMatch = this.shouldApplyMatch(markerMatch);
-		if (shouldApplyMatch) {
-			this.recordMarker(markerMatch.marker, owner, resourceAsString);
-			if (this.currentOwner !== owner || this.currentResource !== resourceAsString) {
-				if (this.currentOwner && this.currentResource) {
-					this.deliverMarkersPerOwnerAndResource(this.currentOwner, this.currentResource);
-				}
-				this.currentOwner = owner;
-				this.currentResource = resourceAsString;
+		this.recordMarker(markerMatch.marker, owner, resourceAsString);
+		if (this.currentOwner !== owner || this.currentResource !== resourceAsString) {
+			if (this.currentOwner && this.currentResource) {
+				this.deliverMarkersPerOwnerAndResource(this.currentOwner, this.currentResource);
 			}
+			this.currentOwner = owner;
+			this.currentResource = resourceAsString;
 		}
 	}
 }
@@ -429,14 +450,11 @@ export class WatchingProblemCollector extends AbstractProblemCollector implement
 		let owner = markerMatch.description.owner;
 		let resourceAsString = resource.toString();
 		this.removeResourceToClean(owner, resourceAsString);
-		let shouldApplyMatch = this.shouldApplyMatch(markerMatch);
-		if (shouldApplyMatch) {
-			this.recordMarker(markerMatch.marker, owner, resourceAsString);
-			if (this.currentOwner !== owner || this.currentResource !== resourceAsString) {
-				this.reportMarkersForCurrentResource();
-				this.currentOwner = owner;
-				this.currentResource = resourceAsString;
-			}
+		this.recordMarker(markerMatch.marker, owner, resourceAsString);
+		if (this.currentOwner !== owner || this.currentResource !== resourceAsString) {
+			this.reportMarkersForCurrentResource();
+			this.currentOwner = owner;
+			this.currentResource = resourceAsString;
 		}
 	}
 
