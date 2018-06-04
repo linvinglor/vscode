@@ -49,24 +49,24 @@ export class Resource {
 
 		switch (element.status) {
 			case GitChangeType.ADD:
-				iconUri = vscode.Uri.parse(Resource.icons.light.Added);
-				iconDarkUri = vscode.Uri.parse(Resource.icons.dark.Added);
+				iconUri = vscode.Uri.file(Resource.icons.light.Added);
+				iconDarkUri = vscode.Uri.file(Resource.icons.dark.Added);
 				break;
 			case GitChangeType.COPY:
-				iconUri = vscode.Uri.parse(Resource.icons.light.Copied);
-				iconDarkUri = vscode.Uri.parse(Resource.icons.dark.Copied);
+				iconUri = vscode.Uri.file(Resource.icons.light.Copied);
+				iconDarkUri = vscode.Uri.file(Resource.icons.dark.Copied);
 				break;
 			case GitChangeType.DELETE:
-				iconUri = vscode.Uri.parse(Resource.icons.light.Deleted);
-				iconDarkUri = vscode.Uri.parse(Resource.icons.dark.Deleted);
+				iconUri = vscode.Uri.file(Resource.icons.light.Deleted);
+				iconDarkUri = vscode.Uri.file(Resource.icons.dark.Deleted);
 				break;
 			case GitChangeType.MODIFY:
-				iconUri = vscode.Uri.parse(Resource.icons.light.Modified);
-				iconDarkUri = vscode.Uri.parse(Resource.icons.dark.Modified);
+				iconUri = vscode.Uri.file(Resource.icons.light.Modified);
+				iconDarkUri = vscode.Uri.file(Resource.icons.dark.Modified);
 				break;
 			case GitChangeType.RENAME:
-				iconUri = vscode.Uri.parse(Resource.icons.light.Renamed);
-				iconDarkUri = vscode.Uri.parse(Resource.icons.dark.Renamed);
+				iconUri = vscode.Uri.file(Resource.icons.light.Renamed);
+				iconDarkUri = vscode.Uri.file(Resource.icons.dark.Renamed);
 				break;
 		}
 

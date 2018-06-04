@@ -83,7 +83,7 @@ export class PRProvider implements vscode.TreeDataProvider<TreeNode>, vscode.Tex
 	async provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): Promise<string> {
 		let { path } = JSON.parse(uri.query);
 		try {
-			let content = fs.readFileSync(path);
+			let content = fs.readFileSync(vscode.Uri.file(path).fsPath);
 			return content.toString();
 		} catch (e) {
 			return '';
