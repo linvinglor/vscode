@@ -503,7 +503,7 @@ export class ReviewManager implements vscode.DecorationProvider {
 
 				if (document.uri.scheme === 'file') {
 					// local file, we only provide active comments.
-					const fileName = document.uri.path;
+					const fileName = document.uri.fsPath;
 					const matchedFiles = this._localFileChanges.filter(fileChange => path.resolve(this._repository.path, fileChange.fileName) === fileName);
 					if (matchedFiles && matchedFiles.length) {
 						const matchedFile = matchedFiles[0];
