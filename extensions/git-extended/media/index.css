@@ -48,7 +48,7 @@ body img.avatar {
 body .review-comment .review-comment-contents {
 	margin-left: 20px;
 	width: 100%;
-	border: 2px solid var(--vscode-activityBar-background);
+	border-top: 1px solid var(--vscode-activityBar-background);
 }
 
 body .review-comment .review-comment-header {
@@ -57,7 +57,7 @@ body .review-comment .review-comment-header {
 	width: 100%;
 	padding: 4px;
 	box-sizing: border-box;
-	background-color: var(--vscode-activityBar-background);
+	background-color: var(--vscode-editor-background);
 }
 
 body .review-comment .review-comment-contents .comment-body {
@@ -117,7 +117,7 @@ body {
 .commit, .review {
 	display: flex;
 	padding: 14px 4px 14px 10px;
-	background-color: var(--vscode-activityBar-background);
+	background-color: var(--vscode-editor-background);
 }
 
 .timestamp {
