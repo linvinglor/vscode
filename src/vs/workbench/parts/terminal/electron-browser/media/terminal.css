@@ -68,7 +68,7 @@
 }
 
 .monaco-workbench .panel.integrated-terminal {
-	font-variant-ligatures: none;
+	/* font-variant-ligatures: none; */
 }
 
 .monaco-workbench .panel.integrated-terminal .split-view-view {
