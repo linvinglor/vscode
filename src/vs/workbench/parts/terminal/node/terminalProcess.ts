@@ -12,11 +12,17 @@ import { ITerminalChildProcess } from 'vs/workbench/parts/terminal/node/terminal
 import { IDisposable } from 'vs/base/common/lifecycle';
 import { IShellLaunchConfig } from 'vs/workbench/parts/terminal/common/terminal';
 
+const FLUSH_INTERVAL_MS = 10;
+
 export class TerminalProcess implements ITerminalChildProcess, IDisposable {
 	private _exitCode: number;
 	private _closeTimeout: number;
 	private _ptyProcess: pty.IPty;
 	private _currentTitle: string = '';
+
+	private _flushInterval: number | null = null;
+	private _dataBuffer: string = '';
+	private _lastFlush: number = 0;
 
 	private readonly _onProcessData: Emitter<string> = new Emitter<string>();
 	public get onProcessData(): Event<string> { return this._onProcessData.event; }
@@ -52,13 +58,7 @@ export class TerminalProcess implements ITerminalChildProcess, IDisposable {
 		};
 
 		this._ptyProcess = pty.spawn(shellLaunchConfig.executable, shellLaunchConfig.args, options);
-		this._ptyProcess.on('data', (data) => {
-			this._onProcessData.fire(data);
-			if (this._closeTimeout) {
-				clearTimeout(this._closeTimeout);
-				this._queueProcessExit();
-			}
-		});
+		this._ptyProcess.on('data', (data) => this._onData(data));
 		this._ptyProcess.on('exit', (code) => {
 			this._exitCode = code;
 			this._queueProcessExit();
@@ -76,6 +76,42 @@ export class TerminalProcess implements ITerminalChildProcess, IDisposable {
 		this._onProcessExit.dispose();
 		this._onProcessIdReady.dispose();
 		this._onProcessTitleChanged.dispose();
+	}
+
+	private _onData(data: string): void {
+		// Add data to buffer
+		this._dataBuffer += data;
+
+		// Flush the buffer immediately if enough time has elapsed (without this a frame would be
+		// skipped)
+		if (Date.now() - this._lastFlush > FLUSH_INTERVAL_MS) {
+			this._flush();
+		}
+
+		// Setup the flush interval, even if the buffer has been flushed.
+		if (this._flushInterval === null) {
+			this._flushInterval = setInterval(() => this._flush(), FLUSH_INTERVAL_MS);
+		}
+	}
+
+	private _flush() {
+		// Abort and uninstall flush interval if there has been no data
+		if (this._dataBuffer.length === 0) {
+			clearInterval(this._flushInterval);
+			this._flushInterval = null;
+			return;
+		}
+
+		// Flush
+		this._onProcessData.fire(this._dataBuffer);
+		this._lastFlush = Date.now();
+		this._dataBuffer = '';
+
+		// Recreate the close timeout
+		if (this._closeTimeout) {
+			clearTimeout(this._closeTimeout);
+			this._queueProcessExit();
+		}
 	}
 
 	private _setupTitlePolling() {
