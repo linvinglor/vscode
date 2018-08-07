@@ -79,9 +79,9 @@ export class TelemetryOptOut implements IWorkbenchContribution {
 		const yesLabelKey = 'telemetryOptOut.OptIn';
 		const noLabelKey = 'telemetryOptOut.OptOut';
 
-		let promptMessage = localize(promptMessageKey, "Please help Microsoft improve Visual Studio Code by allowing the collection of usage data. Read our [privacy statement]({0}) for more details.", this.privacyUrl);
-		let yesLabel = localize(yesLabelKey, "Yes, glad to help");
-		let noLabel = localize(noLabelKey, "No, thanks");
+		let promptMessage = localize('telemetryOptOut.optOutOption', "Please help Microsoft improve Visual Studio Code by allowing the collection of usage data. Read our [privacy statement]({0}) for more details.", this.privacyUrl);
+		let yesLabel = localize('telemetryOptOut.OptIn', "Yes, glad to help");
+		let noLabel = localize('telemetryOptOut.OptOut', "No, thanks");
 
 		let queryPromise = TPromise.as(undefined);
 		if ((locale !== language && locale !== 'en' && locale.indexOf('en-') === -1)) {
