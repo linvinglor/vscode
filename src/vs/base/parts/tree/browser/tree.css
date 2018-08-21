@@ -91,7 +91,7 @@
 	background-image: url('expanded-dark.svg');
 }
 
-.monaco-tree.focused .monaco-tree-rows > .monaco-tree-row.has-children.selected.loading > .content:before {
+.monaco-tree.focused .monaco-tree-rows > .monaco-tree-row.has-children.loading.selected:not(.highlighted) > .content:before {
 	background-image: url('loading-hc.svg');
 }
 
