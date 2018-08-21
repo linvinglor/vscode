@@ -29,6 +29,14 @@
 	background-image: url("collapsed.svg");
 }
 
+.file-icon-themable-tree .monaco-tree.focused .monaco-tree-row.has-children.expanded.selected .content::before {
+	background-image: url("expanded-dark.svg");
+}
+
+.file-icon-themable-tree .monaco-tree.focused .monaco-tree-row.has-children.selected .content::before {
+	background-image: url("collapsed-dark.svg");
+}
+
 .vs-dark .file-icon-themable-tree .monaco-tree-row.has-children.expanded .content::before {
 	background-image: url("expanded-dark.svg");
 }
