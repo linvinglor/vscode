@@ -1857,6 +1857,21 @@ flatten@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/flatten/-/flatten-1.0.2.tgz#dae46a9d78fbe25292258cc1e780a41d95c03782"
 
+font-finder@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/font-finder/-/font-finder-1.0.2.tgz#3863ed777b7d74c3cf68ad8bdfebd9c77911a138"
+  dependencies:
+    get-system-fonts "^2.0.0"
+    promise-stream-reader "^1.0.1"
+
+font-ligatures@^1.3.1:
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/font-ligatures/-/font-ligatures-1.3.1.tgz#397d6c32949027e1598e68a936a532055c6f38dc"
+  dependencies:
+    font-finder "^1.0.2"
+    lru-cache "^4.1.3"
+    opentype.js "^0.8.0"
+
 for-in@^0.1.5:
   version "0.1.5"
   resolved "https://registry.yarnpkg.com/for-in/-/for-in-0.1.5.tgz#007374e2b6d5c67420a1479bdb75a04872b738c4"
@@ -2004,6 +2019,10 @@ get-stdin@^4.0.1:
 get-stream@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/get-stream/-/get-stream-3.0.0.tgz#8e943d1358dc37555054ecbe2edb05aa174ede14"
+
+get-system-fonts@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/get-system-fonts/-/get-system-fonts-2.0.0.tgz#a43b9a33f05c0715a60176d2aad5ce6e98f0a3c6"
 
 getmac@1.4.1:
   version "1.4.1"
@@ -3563,6 +3582,13 @@ lru-cache@^4.1.1:
     pseudomap "^1.0.2"
     yallist "^2.1.2"
 
+lru-cache@^4.1.3:
+  version "4.1.3"
+  resolved "https://registry.yarnpkg.com/lru-cache/-/lru-cache-4.1.3.tgz#a1175cf3496dfc8436c156c334b4955992bce69c"
+  dependencies:
+    pseudomap "^1.0.2"
+    yallist "^2.1.2"
+
 macaddress@^0.2.8:
   version "0.2.8"
   resolved "https://registry.yarnpkg.com/macaddress/-/macaddress-0.2.8.tgz#5904dc537c39ec6dbefeae902327135fa8511f12"
@@ -4070,6 +4096,12 @@ oniguruma@^7.0.0:
   resolved "https://registry.yarnpkg.com/oniguruma/-/oniguruma-7.0.0.tgz#cf258a8b1a2ec1d0d68964d6336df264008ebf4c"
   dependencies:
     nan "^2.0.9"
+
+opentype.js@^0.8.0:
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/opentype.js/-/opentype.js-0.8.0.tgz#acabcfa1642fbe894a3e4d759e43ba694e02bd35"
+  dependencies:
+    tiny-inflate "^1.0.2"
 
 optimist@0.3.5:
   version "0.3.5"
@@ -4621,6 +4653,10 @@ progress-stream@^1.1.0:
 progress@^1.1.8:
   version "1.1.8"
   resolved "https://registry.yarnpkg.com/progress/-/progress-1.1.8.tgz#e260c78f6161cdd9b0e56cc3e0a85de17c7a57be"
+
+promise-stream-reader@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/promise-stream-reader/-/promise-stream-reader-1.0.1.tgz#4e793a79c9d49a73ccd947c6da9c127f12923649"
 
 promisify-node@^0.3.0:
   version "0.3.0"
@@ -5650,6 +5686,10 @@ time-stamp@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/time-stamp/-/time-stamp-1.1.0.tgz#764a5a11af50561921b133f3b44e618687e0f5c3"
 
+tiny-inflate@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/tiny-inflate/-/tiny-inflate-1.0.2.tgz#93d9decffc8805bd57eae4310f0b745e9b6fb3a7"
+
 tmp@0.0.28:
   version "0.0.28"
   resolved "https://registry.yarnpkg.com/tmp/-/tmp-0.0.28.tgz#172735b7f614ea7af39664fa84cf0de4e515d120"
@@ -6280,6 +6320,13 @@ xtend@~2.1.1:
 xtend@~3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/xtend/-/xtend-3.0.0.tgz#5cce7407baf642cba7becda568111c493f59665a"
+
+xterm-addon-ligatures@0.1.0-beta-2:
+  version "0.1.0-beta-2"
+  resolved "https://registry.yarnpkg.com/xterm-addon-ligatures/-/xterm-addon-ligatures-0.1.0-beta-2.tgz#def635fd0ca671fe61179629f8492b76c66dec6e"
+  dependencies:
+    font-finder "^1.0.2"
+    font-ligatures "^1.3.1"
 
 y18n@^3.2.1:
   version "3.2.1"

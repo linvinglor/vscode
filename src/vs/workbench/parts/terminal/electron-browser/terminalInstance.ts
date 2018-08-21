@@ -8,6 +8,7 @@ import * as nls from 'vs/nls';
 import * as platform from 'vs/base/common/platform';
 import * as dom from 'vs/base/browser/dom';
 import * as paths from 'vs/base/common/paths';
+import * as xtermLigatures from 'xterm-addon-ligatures';
 import { Event, Emitter } from 'vs/base/common/event';
 import { WindowsShellHelper } from 'vs/workbench/parts/terminal/node/windowsShellHelper';
 import { Terminal as XTermTerminal } from 'vscode-xterm';
@@ -268,6 +269,7 @@ export class TerminalInstance implements ITerminalInstance {
 			Terminal.applyAddon(require.__$__nodeRequire('vscode-xterm/lib/addons/search/search'));
 			Terminal.applyAddon(require.__$__nodeRequire('vscode-xterm/lib/addons/webLinks/webLinks'));
 			Terminal.applyAddon(require.__$__nodeRequire('vscode-xterm/lib/addons/winptyCompat/winptyCompat'));
+			Terminal.applyAddon(xtermLigatures);
 			// Localize strings
 			Terminal.strings.blankLine = nls.localize('terminal.integrated.a11yBlankLine', 'Blank line');
 			Terminal.strings.promptLabel = nls.localize('terminal.integrated.a11yPromptLabel', 'Terminal input');
@@ -363,6 +365,7 @@ export class TerminalInstance implements ITerminalInstance {
 			(<any>this._wrapperElement).xterm = this._xterm;
 
 			this._xterm.open(this._xtermElement);
+			(<any>this._xterm).enableLigatures();
 			this._xterm.attachCustomKeyEventHandler((event: KeyboardEvent) => {
 				// Disable all input if the terminal is exiting
 				if (this._isExiting) {

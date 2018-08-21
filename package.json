@@ -52,6 +52,7 @@
     "vscode-textmate": "^4.0.1",
     "vscode-xterm": "3.7.0-beta4",
     "winreg": "^1.2.4",
+    "xterm-addon-ligatures": "0.1.0-beta-2",
     "yauzl": "^2.9.1"
   },
   "devDependencies": {

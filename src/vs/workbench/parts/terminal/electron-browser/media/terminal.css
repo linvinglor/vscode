@@ -67,9 +67,9 @@
 	top: auto;
 }
 
-.monaco-workbench .panel.integrated-terminal {
+/* .monaco-workbench .panel.integrated-terminal {
 	font-variant-ligatures: none;
-}
+} */
 
 .monaco-workbench .panel.integrated-terminal .split-view-view {
 	/* Make relative as terminal absolute positioning needs it deeper in the tree */
