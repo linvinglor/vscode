@@ -29,11 +29,11 @@
 	background-image: url("collapsed.svg");
 }
 
-.file-icon-themable-tree .monaco-tree.focused .monaco-tree-row.has-children.expanded.selected .content::before {
+.file-icon-themable-tree .monaco-tree.focused .monaco-tree-row.has-children.expanded.selected:not(.highlighted) .content::before {
 	background-image: url("expanded-dark.svg");
 }
 
-.file-icon-themable-tree .monaco-tree.focused .monaco-tree-row.has-children.selected .content::before {
+.file-icon-themable-tree .monaco-tree.focused .monaco-tree-row.has-children.selected:not(.highlighted) .content::before {
 	background-image: url("collapsed-dark.svg");
 }
 

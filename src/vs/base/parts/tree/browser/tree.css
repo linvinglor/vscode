@@ -81,6 +81,20 @@
 	background-image: url('loading.svg');
 }
 
+/* Selected */
+
+.monaco-tree.focused .monaco-tree-rows.show-twisties > .monaco-tree-row.has-children.focused.selected:not(.highlighted) > .content:before {
+	background-image: url('collapsed-dark.svg');
+}
+
+.monaco-tree.focused .monaco-tree-rows.show-twisties > .monaco-tree-row.expanded.focused.selected:not(.highlighted) > .content:before {
+	background-image: url('expanded-dark.svg');
+}
+
+.monaco-tree.focused .monaco-tree-rows > .monaco-tree-row.has-children.selected.loading > .content:before {
+	background-image: url('loading-hc.svg');
+}
+
 /* Highlighted */
 
 .monaco-tree.highlighted .monaco-tree-rows > .monaco-tree-row:not(.highlighted) {
