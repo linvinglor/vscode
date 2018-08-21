@@ -11,9 +11,9 @@ import * as path from 'path';
 import { memoize } from 'vs/base/common/decorators';
 import pkg from 'vs/platform/node/package';
 import product from 'vs/platform/node/product';
-import { toLocalISOString } from 'vs/base/common/date';
 import { isWindows, isLinux } from 'vs/base/common/platform';
 import { getPathFromAmdModule } from 'vs/base/common/amd';
+import { toLocalISOString } from 'vs/base/common/date';
 
 // Read this before there's any chance it is overwritten
 // Related to https://github.com/Microsoft/vscode/issues/30624
@@ -84,7 +84,17 @@ export class EnvironmentService implements IEnvironmentService {
 	@memoize
 	get cliPath(): string { return getCLIPath(this.execPath, this.appRoot, this.isBuilt); }
 
-	readonly logsPath: string;
+	@memoize
+	get logsPath(): string {
+		if (!process.env['VSCODE_LOGS']) {
+			const key = toLocalISOString(new Date()).replace(/-|:|\.\d+Z$/g, '');
+			const logsPath = path.join(this.userDataPath, 'logs', key);
+			process.env['VSCODE_LOGS'] = logsPath;
+			return logsPath;
+		}
+
+		return process.env['VSCODE_LOGS'];
+	}
 
 	@memoize
 	get userHome(): string { return os.homedir(); }
@@ -206,14 +216,7 @@ export class EnvironmentService implements IEnvironmentService {
 	get driverHandle(): string { return this._args['driver']; }
 	get driverVerbose(): boolean { return this._args['driver-verbose']; }
 
-	constructor(private _args: ParsedArgs, private _execPath: string) {
-		if (!process.env['VSCODE_LOGS']) {
-			const key = toLocalISOString(new Date()).replace(/-|:|\.\d+Z$/g, '');
-			process.env['VSCODE_LOGS'] = path.join(this.userDataPath, 'logs', key);
-		}
-
-		this.logsPath = process.env['VSCODE_LOGS'];
-	}
+	constructor(private _args: ParsedArgs, private _execPath: string) { }
 }
 
 export function parseExtensionHostPort(args: ParsedArgs, isBuild: boolean): IExtensionHostDebugParams {

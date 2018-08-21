@@ -9,6 +9,7 @@ perf.mark('main:started');
 
 Error.stackTraceLimit = 100; // increase number of stack frames (from 10, https://github.com/v8/v8/wiki/Stack-Trace-API)
 
+//#region Portable mode
 const fs = require('fs');
 const path = require('path');
 const product = require('../product.json');
@@ -51,6 +52,7 @@ if (isPortable) {
 if (isTempPortable) {
 	process.env[process.platform === 'win32' ? 'TEMP' : 'TMPDIR'] = portableTempPath;
 }
+//#endregion
 
 //#region Add support for using node_modules.asar
 (function () {
@@ -96,6 +98,7 @@ const args = minimist(process.argv, {
 	]
 });
 
+//#region User data path
 function getUserDataPath() {
 	if (isPortable) {
 		return path.join(portableDataPath, 'user-data');
@@ -108,6 +111,34 @@ const userDataPath = getUserDataPath();
 
 // Set userData path before app 'ready' event and call to process.chdir
 app.setPath('userData', userDataPath);
+//#endregion
+
+//#region Logs
+function pad(n, l, char = '0') {
+	let str = '' + n;
+	let r = [str];
+
+	for (let i = str.length; i < l; i++) {
+		r.push(char);
+	}
+
+	return r.reverse().join('');
+}
+
+function toLocalISOString(date) {
+	return date.getFullYear() +
+		'-' + pad(date.getMonth() + 1, 2) +
+		'-' + pad(date.getDate(), 2) +
+		'T' + pad(date.getHours(), 2) +
+		':' + pad(date.getMinutes(), 2) +
+		':' + pad(date.getSeconds(), 2) +
+		'.' + (date.getMilliseconds() / 1000).toFixed(3).slice(2, 5) +
+		'Z';
+}
+
+const logsKey = toLocalISOString(new Date()).replace(/-|:|\.\d+Z$/g, '');
+process.env['VSCODE_LOGS'] = path.join(userDataPath, 'logs', logsKey);
+//#endregion
 
 //#region NLS
 function stripComments(content) {
