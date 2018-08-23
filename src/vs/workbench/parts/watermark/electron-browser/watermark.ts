@@ -169,12 +169,21 @@ export class WatermarkContribution implements IWorkbenchContribution {
 								if (k) {
 									const letters = escape(k.getLabel());
 									let shortcutKey = `<span class="shortcuts">`;
-									if (letters.charAt(0) !== `F`) {
+									if (letters.indexOf('F') > -1 || letters.indexOf('Ctrl') > -1 || letters.indexOf('Shift') > -1) {
+										if (letters.indexOf('+') > -1) {
+											letters.split('+').forEach(function (item, index, arr) {
+												shortcutKey += `<span>${item}</span>`;
+												if (index !== arr.length - 1) {
+													shortcutKey += `+`;
+												}
+											});
+										} else {
+											shortcutKey += `<span>${letters}</span>`;
+										}
+									} else {
 										for (let i of letters) {
 											shortcutKey += `<span>${i}</span>`;
 										}
-									} else {
-										shortcutKey += `<span>${letters}</span>`;
 									}
 									shortcutKey += `</span>`;
 									return shortcutKey;
