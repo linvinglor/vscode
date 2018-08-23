@@ -167,7 +167,17 @@ export class WatermarkContribution implements IWorkbenchContribution {
 							.map(id => {
 								let k = this.keybindingService.lookupKeybinding(id);
 								if (k) {
-									return `<span class="shortcuts">${escape(k.getLabel())}</span>`;
+									const letters = escape(k.getLabel());
+									let shortcutKey = `<span class="shortcuts">`;
+									if (letters.charAt(0) !== `F`) {
+										for (let i of letters) {
+											shortcutKey += `<span>${i}</span>`;
+										}
+									} else {
+										shortcutKey += `<span>${letters}</span>`;
+									}
+									shortcutKey += `</span>`;
+									return shortcutKey;
 								}
 								return `<span class="unbound">${escape(UNBOUND)}</span>`;
 							})
