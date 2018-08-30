@@ -18,6 +18,7 @@ import { formatPII } from 'vs/workbench/parts/debug/common/debugUtils';
 import { SocketDebugAdapter } from 'vs/workbench/parts/debug/node/debugAdapter';
 import { DebugEvent, IRawSession, IDebugAdapter } from 'vs/workbench/parts/debug/common/debug';
 import { CancellationToken, CancellationTokenSource } from 'vs/base/common/cancellation';
+import { ILogService } from 'vs/platform/log/common/log';
 
 export interface SessionExitedEvent extends DebugEvent {
 	body: {
@@ -70,7 +71,8 @@ export class RawDebugSession implements IRawSession {
 		private root: IWorkspaceFolder,
 		@INotificationService private notificationService: INotificationService,
 		@ITelemetryService private telemetryService: ITelemetryService,
-		@IOutputService private outputService: IOutputService
+		@IOutputService private outputService: IOutputService,
+		@ILogService private logService: ILogService
 	) {
 		this.emittedStopped = false;
 		this.readyForBreakpoints = false;
@@ -177,6 +179,7 @@ export class RawDebugSession implements IRawSession {
 	}
 
 	private send<R extends DebugProtocol.Response>(command: string, args: any, cancelOnDisconnect = true): TPromise<R> {
+		this.logService.debug('RAW SESSION SEND ' + command, JSON.stringify(args));
 		return this.initServer().then(() => {
 			const cancellationSource = new CancellationTokenSource();
 			const promise = this.internalSend<R>(command, args, cancellationSource.token).then(response => response, (errorResponse: DebugProtocol.ErrorResponse) => {

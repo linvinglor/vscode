@@ -53,6 +53,7 @@ import { Session } from 'vs/workbench/parts/debug/electron-browser/debugSession'
 import { equalsIgnoreCase } from 'vs/base/common/strings';
 import { dispose, IDisposable } from 'vs/base/common/lifecycle';
 import { IDebugService, State, ISession, CONTEXT_DEBUG_TYPE, CONTEXT_DEBUG_STATE, CONTEXT_IN_DEBUG_MODE, IThread, IDebugConfiguration, VIEWLET_ID, REPL_ID, IConfig, ILaunch, IViewModel, IConfigurationManager, IModel, IReplElementSource, IEnablement, IBreakpoint, IBreakpointData, IExpression, ICompound, IGlobalConfig, IStackFrame } from 'vs/workbench/parts/debug/common/debug';
+import { ILogService } from 'vs/platform/log/common/log';
 
 const DEBUG_BREAKPOINTS_KEY = 'debug.breakpoint';
 const DEBUG_BREAKPOINTS_ACTIVATED_KEY = 'debug.breakpointactivated';
@@ -100,6 +101,7 @@ export class DebugService implements IDebugService {
 		@ITaskService private taskService: ITaskService,
 		@IFileService private fileService: IFileService,
 		@IConfigurationService private configurationService: IConfigurationService,
+		@ILogService private logService: ILogService
 	) {
 		this.toDispose = [];
 		this.breakpointsToSendOnResourceSaved = new Set<string>();
@@ -141,11 +143,14 @@ export class DebugService implements IDebugService {
 			return;
 		}
 
+		this.logService.debug('DEBUG ON BROADCAST', JSON.stringify(broadcast));
+		this.logService.debug('SESSION', JSON.stringify(session));
 		if (broadcast.channel === EXTENSION_ATTACH_BROADCAST_CHANNEL) {
 			session.configuration.request = 'attach';
 			session.configuration.port = broadcast.payload.port;
 			const dbgr = this.configurationManager.getDebugger(session.configuration.type);
 			session.initialize(dbgr).then(() => {
+				this.logService.debug('INITIALIZED SESSION NOW ATTACHING');
 				(<RawDebugSession>session.raw).attach(session.configuration);
 				this.focusStackFrame(undefined, undefined, session);
 			});
@@ -646,6 +651,7 @@ export class DebugService implements IDebugService {
 		const dbgr = this.configurationManager.getDebugger(resolved.type);
 		const session = this.instantiationService.createInstance(Session, sessionId, configuration, root, this.model);
 		this.allSessions.set(sessionId, session);
+		this.logService.debug('INTIALIZING SESSION FROM DO CREATE SESSOIN');
 		return session.initialize(dbgr).then(() => {
 			this.registerSessionListeners(session);
 			const raw = <RawDebugSession>session.raw;

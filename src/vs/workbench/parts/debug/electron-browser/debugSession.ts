@@ -28,6 +28,7 @@ import { IDisposable, dispose } from 'vs/base/common/lifecycle';
 import { RunOnceScheduler } from 'vs/base/common/async';
 import { generateUuid } from 'vs/base/common/uuid';
 import { ITelemetryService } from 'vs/platform/telemetry/common/telemetry';
+import { ILogService } from 'vs/platform/log/common/log';
 
 export class Session implements ISession {
 
@@ -51,6 +52,7 @@ export class Session implements ISession {
 		@INotificationService private notificationService: INotificationService,
 		@IDebugService private debugService: IDebugService,
 		@ITelemetryService private telemetryService: ITelemetryService,
+		@ILogService private logService: ILogService
 	) {
 		this.state = State.Initializing;
 	}
@@ -431,6 +433,7 @@ export class Session implements ISession {
 	}
 
 	dispose(): void {
+		this.logService.debug('DISPOSING SESSION', !!this.raw);
 		dispose(this.rawListeners);
 		this.model.clearThreads(this.getId(), true);
 		this.model.removeSession(this.getId());
