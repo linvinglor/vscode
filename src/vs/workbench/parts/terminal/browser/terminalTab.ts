@@ -9,6 +9,7 @@ import { Event, Emitter, anyEvent } from 'vs/base/common/event';
 import { IDisposable, Disposable } from 'vs/base/common/lifecycle';
 import { SplitView, Orientation, IView, Sizing } from 'vs/base/browser/ui/splitview/splitview';
 import { IPartService, Position } from 'vs/workbench/services/part/common/partService';
+import { ITelemetryService } from 'vs/platform/telemetry/common/telemetry';
 
 const SPLIT_PANE_MIN_SIZE = 120;
 
@@ -225,7 +226,8 @@ export class TerminalTab extends Disposable implements ITerminalTab {
 		private _container: HTMLElement,
 		shellLaunchConfig: IShellLaunchConfig,
 		@ITerminalService private readonly _terminalService: ITerminalService,
-		@IPartService private readonly _partService: IPartService
+		@IPartService private readonly _partService: IPartService,
+		@ITelemetryService private readonly _telemetryService: ITelemetryService
 	) {
 		super();
 		this._onDisposed = new Emitter<ITerminalTab>();
@@ -238,6 +240,7 @@ export class TerminalTab extends Disposable implements ITerminalTab {
 			shellLaunchConfig,
 			true);
 		this._terminalInstances.push(instance);
+		this._telemetryService.publicLog('terminal:create', { totalCount: this._terminalInstances.length, isSplit: false });
 		this._initInstanceListeners(instance);
 		this._activeInstanceIndex = 0;
 
@@ -368,6 +371,7 @@ export class TerminalTab extends Disposable implements ITerminalTab {
 			shellLaunchConfig,
 			true);
 		this._terminalInstances.splice(this._activeInstanceIndex + 1, 0, instance);
+		this._telemetryService.publicLog('terminal:create', { totalCount: this._terminalInstances.length, isSplit: true });
 		this._initInstanceListeners(instance);
 		this._setActiveInstance(instance);
 

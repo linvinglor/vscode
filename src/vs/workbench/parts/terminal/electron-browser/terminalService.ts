@@ -29,6 +29,7 @@ import { IOpenFileRequest } from 'vs/platform/windows/common/windows';
 import { TerminalInstance } from 'vs/workbench/parts/terminal/electron-browser/terminalInstance';
 import { IExtensionService } from 'vs/workbench/services/extensions/common/extensions';
 import { IQuickInputService, IQuickPickItem, IPickOptions } from 'vs/platform/quickinput/common/quickInput';
+import { ITelemetryService } from 'vs/platform/telemetry/common/telemetry';
 
 export class TerminalService extends AbstractTerminalService implements ITerminalService {
 	private _configHelper: TerminalConfigHelper;
@@ -40,11 +41,12 @@ export class TerminalService extends AbstractTerminalService implements ITermina
 	}
 
 	constructor(
-		@IContextKeyService contextKeyService: IContextKeyService,
-		@IPanelService panelService: IPanelService,
-		@IPartService partService: IPartService,
-		@IStorageService storageService: IStorageService,
-		@ILifecycleService lifecycleService: ILifecycleService,
+		@IContextKeyService readonly contextKeyService: IContextKeyService,
+		@IPanelService readonly panelService: IPanelService,
+		@IPartService readonly partService: IPartService,
+		@IStorageService readonly storageService: IStorageService,
+		@ILifecycleService readonly lifecycleService: ILifecycleService,
+		@ITelemetryService readonly telemetryService: ITelemetryService,
 		@IConfigurationService private readonly _configurationService: IConfigurationService,
 		@IInstantiationService private readonly _instantiationService: IInstantiationService,
 		@IQuickInputService private readonly _quickInputService: IQuickInputService,
@@ -52,7 +54,7 @@ export class TerminalService extends AbstractTerminalService implements ITermina
 		@IDialogService private readonly _dialogService: IDialogService,
 		@IExtensionService private readonly _extensionService: IExtensionService
 	) {
-		super(contextKeyService, panelService, partService, lifecycleService, storageService);
+		super(contextKeyService, panelService, partService, lifecycleService, storageService, telemetryService);
 
 		this._terminalTabs = [];
 		this._configHelper = this._instantiationService.createInstance(TerminalConfigHelper);

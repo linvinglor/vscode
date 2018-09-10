@@ -11,6 +11,7 @@ import { IPartService } from 'vs/workbench/services/part/common/partService';
 import { ITerminalService, ITerminalInstance, IShellLaunchConfig, ITerminalConfigHelper, KEYBINDING_CONTEXT_TERMINAL_FOCUS, KEYBINDING_CONTEXT_TERMINAL_FIND_WIDGET_VISIBLE, TERMINAL_PANEL_ID, ITerminalTab, ITerminalProcessExtHostProxy, ITerminalProcessExtHostRequest, KEYBINDING_CONTEXT_TERMINAL_IS_OPEN } from 'vs/workbench/parts/terminal/common/terminal';
 import { TPromise } from 'vs/base/common/winjs.base';
 import { IStorageService } from 'vs/platform/storage/common/storage';
+import { ITelemetryService } from 'vs/platform/telemetry/common/telemetry';
 
 export abstract class TerminalService implements ITerminalService {
 	public _serviceBrand: any;
@@ -56,7 +57,8 @@ export abstract class TerminalService implements ITerminalService {
 		@IPanelService protected readonly _panelService: IPanelService,
 		@IPartService private readonly _partService: IPartService,
 		@ILifecycleService lifecycleService: ILifecycleService,
-		@IStorageService protected readonly _storageService: IStorageService
+		@IStorageService protected readonly _storageService: IStorageService,
+		@ITelemetryService private readonly _telemetryService: ITelemetryService
 	) {
 		this._activeTabIndex = 0;
 		this._isShuttingDown = false;
@@ -66,6 +68,7 @@ export abstract class TerminalService implements ITerminalService {
 		this._terminalFocusContextKey = KEYBINDING_CONTEXT_TERMINAL_FOCUS.bindTo(this._contextKeyService);
 		this._findWidgetVisible = KEYBINDING_CONTEXT_TERMINAL_FIND_WIDGET_VISIBLE.bindTo(this._contextKeyService);
 		this.onTabDisposed(tab => this._removeTab(tab));
+		this.onInstanceDisposed(() => this._telemetryService.publicLog('terminal:dispose', { totalCount: this._terminalInstances.length - 1 }));
 
 		this._handleContextKeys();
 	}
