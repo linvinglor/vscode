@@ -1,0 +1,12 @@
+{
+"name": "Test",
+	"tokenColors": [
+		{
+			"scope": ["comment.block" ],
+			"settings": {
+				"background": "#FDF6E3",
+				"foreground": "#657B83"
+			}
+		}
+	]
+}

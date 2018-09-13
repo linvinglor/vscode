@@ -19,10 +19,6 @@ module.exports = withDefaults({
 	output: {
 		filename: 'jsonServerMain.js',
 		path: path.join(__dirname, 'dist'),
-		libraryTarget: "commonjs",
-	},
-	externals: {
-		"vscode-nls": 'commonjs vscode-nls',
 	},
 	plugins: [
 		new webpack.NormalModuleReplacementPlugin(

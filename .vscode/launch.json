@@ -126,6 +126,20 @@
 			]
 		},
 		{
+			"type": "extensionHost",
+			"request": "launch",
+			"name": "VS Code JSON Tests",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"${workspaceFolder}/extensions/json-language-features/test",
+				"--extensionDevelopmentPath=${workspaceFolder}/extensions/json-language-features",
+				"--extensionTestsPath=${workspaceFolder}/extensions/json-language-features/client/out/test"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			]
+		},
+		{
 			"type": "chrome",
 			"request": "attach",
 			"name": "Attach to VS Code",
