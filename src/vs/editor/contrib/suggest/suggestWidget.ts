@@ -202,6 +202,7 @@ class SuggestionDetails {
 	private disposables: IDisposable[];
 	private renderDisposeable: IDisposable;
 	private borderWidth: number = 1;
+	private _isFocused: boolean;
 
 	constructor(
 		container: HTMLElement,
@@ -236,10 +237,18 @@ class SuggestionDetails {
 			.on(this.configureFont, this, this.disposables);
 
 		markdownRenderer.onDidRenderCodeBlock(() => this.scrollbar.scanDomNode(), this, this.disposables);
+
+		this._isFocused = false;
+		this.el.onmouseenter = () => this._isFocused = true;
+		this.el.onmouseleave = () => this._isFocused = false;
 	}
 
 	get element() {
 		return this.el;
+	}
+
+	get isFocused() {
+		return this._isFocused;
 	}
 
 	render(item: ICompletionItem): void {
@@ -273,7 +282,7 @@ class SuggestionDetails {
 		}
 
 		this.el.style.height = this.header.offsetHeight + this.docs.offsetHeight + (this.borderWidth * 2) + 'px';
-
+		this.el.style.userSelect = 'text';
 		this.close.onmousedown = e => {
 			e.preventDefault();
 			e.stopPropagation();
@@ -344,6 +353,8 @@ class SuggestionDetails {
 	dispose(): void {
 		this.disposables = dispose(this.disposables);
 		this.renderDisposeable = dispose(this.renderDisposeable);
+		this.element.onmouseenter = null;
+		this.element.onmouseleave = null;
 	}
 }
 
@@ -944,6 +955,10 @@ export class SuggestWidget implements IContentWidget, IVirtualDelegate<ICompleti
 		this.suggestWidgetVisible.reset();
 		this.suggestWidgetMultipleSuggestions.reset();
 		removeClass(this.element, 'visible');
+	}
+
+	get isDetailsFocused(): boolean {
+		return this.details.isFocused;
 	}
 
 	hideWidget(): void {

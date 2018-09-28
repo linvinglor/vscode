@@ -129,7 +129,7 @@ export class SuggestController implements IEditorContribution {
 			}
 		}));
 		this._toDispose.push(this._editor.onDidBlurEditorText(() => {
-			if (!this._sticky) {
+			if (!this._sticky && (!this._widget || !this._widget.isDetailsFocused)) {
 				this._model.cancel();
 			}
 		}));
