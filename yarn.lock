@@ -5976,9 +5976,9 @@ node-pre-gyp@^0.10.0:
     semver "^5.3.0"
     tar "^4"
 
-"node-pty@https://github.com/Tyriar/node-pty#dev/migrie/f/conpty":
+"node-pty@https://github.com/Microsoft/node-pty#d78711f55887c041fe4f6bc5b1818b991ef062ed":
   version "0.7.6"
-  resolved "https://github.com/Tyriar/node-pty#0c9f57403ba122bc6808c0d2fd4cdfb286f24881"
+  resolved "https://github.com/Microsoft/node-pty#d78711f55887c041fe4f6bc5b1818b991ef062ed"
   dependencies:
     nan "2.10.0"
 
