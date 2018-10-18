@@ -100,6 +100,7 @@ export interface ITerminalConfiguration {
 	};
 	showExitAlert: boolean;
 	experimentalBufferImpl: 'JsArray' | 'TypedArray';
+	experimentalUseConpty: boolean;
 }
 
 export interface ITerminalConfigHelper {
