@@ -128,7 +128,7 @@ class CommentingRangeDecorator {
 			return;
 		}
 
-		let commentingRangeDecorations = [];
+		let commentingRangeDecorations: CommentingRangeDecoration[] = [];
 		for (let i = 0; i < commentInfos.length; i++) {
 			let info = commentInfos[i];
 			info.commentingRanges.forEach(range => {
@@ -168,7 +168,6 @@ export class ReviewController implements IEditorContribution {
 	private _commentWidgets: ReviewZoneWidget[];
 	private _reviewPanelVisible: IContextKey<boolean>;
 	private _commentInfos: modes.CommentInfo[];
-	// private _hasSetComments: boolean;
 	private _commentingRangeDecorator: CommentingRangeDecorator;
 	private mouseDownInfo: { lineNumber: number } | null = null;
 	private _commentingRangeSpaceReserved = false;
@@ -193,7 +192,6 @@ export class ReviewController implements IEditorContribution {
 		this._commentInfos = [];
 		this._commentWidgets = [];
 		this._newCommentWidget = null;
-		// this._hasSetComments = false;
 
 		this._reviewPanelVisible = ctxReviewPanelVisible.bindTo(contextKeyService);
 		this._commentingRangeDecorator = new CommentingRangeDecorator();
@@ -470,7 +468,7 @@ export class ReviewController implements IEditorContribution {
 		if (this._commentInfos.some(info => Boolean(info.commentingRanges && info.commentingRanges.length))) {
 			if (!this._commentingRangeSpaceReserved) {
 				this._commentingRangeSpaceReserved = true;
-				let extraEditorClassName = [];
+				let extraEditorClassName: string[] = [];
 				if (this.editor.getRawConfiguration().extraEditorClassName) {
 					extraEditorClassName = this.editor.getRawConfiguration().extraEditorClassName.split(' ');
 				}
@@ -495,8 +493,6 @@ export class ReviewController implements IEditorContribution {
 			}
 		}
 
-		// this._hasSetComments = true;
-
 		// create viewzones
 		this._commentWidgets.forEach(zone => {
 			zone.dispose();
@@ -512,7 +508,7 @@ export class ReviewController implements IEditorContribution {
 			});
 		});
 
-		const commentingRanges = [];
+		const commentingRanges: IRange[] = [];
 		this._commentInfos.forEach(info => {
 			commentingRanges.push(...info.commentingRanges);
 		});
