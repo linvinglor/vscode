@@ -39,11 +39,10 @@ import { IFileService, IFileStat } from 'vs/platform/files/common/files';
 import { IExtensionService } from 'vs/workbench/services/extensions/common/extensions';
 import { CommandsRegistry } from 'vs/platform/commands/common/commands';
 import { KeybindingsRegistry, KeybindingWeight } from 'vs/platform/keybinding/common/keybindingsRegistry';
-import { ProblemMatcherRegistry, NamedProblemMatcher } from 'vs/workbench/parts/tasks/common/problemMatcher';
+import { ProblemMatcherRegistry } from 'vs/workbench/parts/problemMatching/common/problemMatcher';
 import { IStorageService, StorageScope } from 'vs/platform/storage/common/storage';
 import { IProgressService2, IProgressOptions, ProgressLocation } from 'vs/platform/progress/common/progress';
 
-import { IOpenerService } from 'vs/platform/opener/common/opener';
 import { IWindowService } from 'vs/platform/windows/common/windows';
 import { INotificationService } from 'vs/platform/notification/common/notification';
 import { IDialogService, IConfirmationResult } from 'vs/platform/dialogs/common/dialogs';
@@ -76,7 +75,7 @@ import {
 	TaskEventKind, TaskSet, TaskGroup, GroupType, ExecutionEngine, JsonSchemaVersion, TaskSourceKind,
 	TaskSorter, TaskIdentifier, KeyedTaskIdentifier, TASK_RUNNING_STATE
 } from 'vs/workbench/parts/tasks/common/tasks';
-import { ITaskService, ITaskProvider, RunOptions, CustomizationProperties, TaskFilter } from 'vs/workbench/parts/tasks/common/taskService';
+import { ITaskService, ITaskProvider, /*RunOptions,*/ CustomizationProperties, TaskFilter } from 'vs/workbench/parts/tasks/common/taskService';
 import { getTemplates as getTaskTemplates } from 'vs/workbench/parts/tasks/common/taskTemplates';
 
 import { KeyedTaskIdentifier as NKeyedTaskIdentifier, TaskDefinition } from 'vs/workbench/parts/tasks/node/tasks';
@@ -483,7 +482,6 @@ class TaskService extends Disposable implements ITaskService {
 		@ITerminalService private terminalService: ITerminalService,
 		@IStorageService private storageService: IStorageService,
 		@IProgressService2 private progressService: IProgressService2,
-		@IOpenerService private openerService: IOpenerService,
 		@IWindowService private readonly _windowService: IWindowService,
 		@IDialogService private dialogService: IDialogService,
 		@INotificationService private notificationService: INotificationService,
@@ -806,9 +804,9 @@ class TaskService extends Disposable implements ITaskService {
 		this.storageService.store(TaskService.RecentlyUsedTasks_Key, JSON.stringify(values), StorageScope.WORKSPACE);
 	}
 
-	private openDocumentation(): void {
-		this.openerService.open(URI.parse('https://go.microsoft.com/fwlink/?LinkId=733558'));
-	}
+	// private openDocumentation(): void {
+	// 	this.openerService.open(URI.parse('https://go.microsoft.com/fwlink/?LinkId=733558'));
+	// }
 
 	public build(): TPromise<ITaskSummary> {
 		return this.getGroupedTasks().then((tasks) => {
@@ -844,21 +842,12 @@ class TaskService extends Disposable implements ITaskService {
 		});
 	}
 
-	public run(task: Task, options?: RunOptions): TPromise<ITaskSummary> {
+	public run(task: Task /*, options?: RunOptions*/): TPromise<ITaskSummary> {
 		return this.getGroupedTasks().then((grouped) => {
 			if (!task) {
 				throw new TaskError(Severity.Info, nls.localize('TaskServer.noTask', 'Requested task {0} to execute not found.', task.name), TaskErrors.TaskNotFound);
 			} else {
 				let resolver = this.createResolver(grouped);
-				if (options && options.attachProblemMatcher && this.shouldAttachProblemMatcher(task) && !InMemoryTask.is(task)) {
-					return this.attachProblemMatcher(task).then((toExecute) => {
-						if (toExecute) {
-							return this.executeTask(toExecute, resolver);
-						} else {
-							return TPromise.as(undefined);
-						}
-					});
-				}
 				return this.executeTask(task, resolver);
 			}
 		}).then(value => value, (error) => {
@@ -866,89 +855,90 @@ class TaskService extends Disposable implements ITaskService {
 			return TPromise.wrapError(error);
 		});
 	}
-
-	private shouldAttachProblemMatcher(task: Task): boolean {
-		if (!this.canCustomize(task)) {
-			return false;
-		}
-		if (task.group !== void 0 && task.group !== TaskGroup.Build) {
-			return false;
-		}
-		if (task.problemMatchers !== void 0 && task.problemMatchers.length > 0) {
-			return false;
-		}
-		if (ContributedTask.is(task)) {
-			return !task.hasDefinedMatchers && task.problemMatchers.length === 0;
-		}
-		if (CustomTask.is(task)) {
-			let configProperties: TaskConfig.ConfigurationProperties = task._source.config.element;
-			return configProperties.problemMatcher === void 0 && !task.hasDefinedMatchers;
-		}
-		return false;
-	}
-
-	private attachProblemMatcher(task: ContributedTask | CustomTask): TPromise<Task> {
-		interface ProblemMatcherPickEntry extends IQuickPickItem {
-			matcher: NamedProblemMatcher;
-			never?: boolean;
-			learnMore?: boolean;
-		}
-		let entries: QuickPickInput<ProblemMatcherPickEntry>[] = [];
-		for (let key of ProblemMatcherRegistry.keys()) {
-			let matcher = ProblemMatcherRegistry.get(key);
-			if (matcher.deprecated) {
-				continue;
+	/*
+		private shouldAttachProblemMatcher(task: Task): boolean {
+			if (!this.canCustomize(task)) {
+				return false;
 			}
-			if (matcher.name === matcher.label) {
-				entries.push({ label: matcher.name, matcher: matcher });
-			} else {
-				entries.push({
-					label: matcher.label,
-					description: `$${matcher.name}`,
-					matcher: matcher
+			if (task.group !== void 0 && task.group !== TaskGroup.Build) {
+				return false;
+			}
+			if (task.problemMatchers !== void 0 && task.problemMatchers.length > 0) {
+				return false;
+			}
+			if (ContributedTask.is(task)) {
+				return !task.hasDefinedMatchers && task.problemMatchers.length === 0;
+			}
+			if (CustomTask.is(task)) {
+				let configProperties: TaskConfig.ConfigurationProperties = task._source.config.element;
+				return configProperties.problemMatcher === void 0 && !task.hasDefinedMatchers;
+			}
+			return false;
+		}
+
+		private attachProblemMatcher(task: ContributedTask | CustomTask): TPromise<Task> {
+			interface ProblemMatcherPickEntry extends IQuickPickItem {
+				matcher: NamedProblemMatcher;
+				never?: boolean;
+				learnMore?: boolean;
+			}
+			let entries: QuickPickInput<ProblemMatcherPickEntry>[] = [];
+			for (let key of ProblemMatcherRegistry.keys()) {
+				let matcher = ProblemMatcherRegistry.get(key);
+				if (matcher.deprecated) {
+					continue;
+				}
+				if (matcher.name === matcher.label) {
+					entries.push({ label: matcher.name, matcher: matcher });
+				} else {
+					entries.push({
+						label: matcher.label,
+						description: `$${matcher.name}`,
+						matcher: matcher
+					});
+				}
+			}
+			if (entries.length > 0) {
+				entries = entries.sort((a, b) => a.label.localeCompare(b.label));
+				entries.unshift({ type: 'separator', label: nls.localize('TaskService.associate', 'associate') });
+				entries.unshift(
+					{ label: nls.localize('TaskService.attachProblemMatcher.continueWithout', 'Continue without scanning the task output'), matcher: undefined },
+					{ label: nls.localize('TaskService.attachProblemMatcher.never', 'Never scan the task output'), matcher: undefined, never: true },
+					{ label: nls.localize('TaskService.attachProblemMatcher.learnMoreAbout', 'Learn more about scanning the task output'), matcher: undefined, learnMore: true }
+				);
+				return this.quickInputService.pick(entries, {
+					placeHolder: nls.localize('selectProblemMatcher', 'Select for which kind of errors and warnings to scan the task output'),
+				}).then((selected) => {
+					if (selected) {
+						if (selected.learnMore) {
+							this.openDocumentation();
+							return undefined;
+						} else if (selected.never) {
+							this.customize(task, { problemMatcher: [] }, true);
+							return task;
+						} else if (selected.matcher) {
+							let newTask = Task.clone(task);
+							let matcherReference = `$${selected.matcher.name}`;
+							let properties: CustomizationProperties = { problemMatcher: [matcherReference] };
+							newTask.problemMatchers = [matcherReference];
+							let matcher = ProblemMatcherRegistry.get(selected.matcher.name);
+							if (matcher && matcher.watching !== void 0) {
+								properties.isBackground = true;
+								newTask.isBackground = true;
+							}
+							this.customize(task, properties, true);
+							return newTask;
+						} else {
+							return task;
+						}
+					} else {
+						return undefined;
+					}
 				});
 			}
+			return TPromise.as(task);
 		}
-		if (entries.length > 0) {
-			entries = entries.sort((a, b) => a.label.localeCompare(b.label));
-			entries.unshift({ type: 'separator', label: nls.localize('TaskService.associate', 'associate') });
-			entries.unshift(
-				{ label: nls.localize('TaskService.attachProblemMatcher.continueWithout', 'Continue without scanning the task output'), matcher: undefined },
-				{ label: nls.localize('TaskService.attachProblemMatcher.never', 'Never scan the task output'), matcher: undefined, never: true },
-				{ label: nls.localize('TaskService.attachProblemMatcher.learnMoreAbout', 'Learn more about scanning the task output'), matcher: undefined, learnMore: true }
-			);
-			return this.quickInputService.pick(entries, {
-				placeHolder: nls.localize('selectProblemMatcher', 'Select for which kind of errors and warnings to scan the task output'),
-			}).then((selected) => {
-				if (selected) {
-					if (selected.learnMore) {
-						this.openDocumentation();
-						return undefined;
-					} else if (selected.never) {
-						this.customize(task, { problemMatcher: [] }, true);
-						return task;
-					} else if (selected.matcher) {
-						let newTask = Task.clone(task);
-						let matcherReference = `$${selected.matcher.name}`;
-						let properties: CustomizationProperties = { problemMatcher: [matcherReference] };
-						newTask.problemMatchers = [matcherReference];
-						let matcher = ProblemMatcherRegistry.get(selected.matcher.name);
-						if (matcher && matcher.watching !== void 0) {
-							properties.isBackground = true;
-							newTask.isBackground = true;
-						}
-						this.customize(task, properties, true);
-						return newTask;
-					} else {
-						return task;
-					}
-				} else {
-					return undefined;
-				}
-			});
-		}
-		return TPromise.as(task);
-	}
+		*/
 
 	public getTasksForGroup(group: string): TPromise<Task[]> {
 		return this.getGroupedTasks().then((groups) => {
@@ -1975,7 +1965,7 @@ class TaskService extends Disposable implements ITaskService {
 					if (task === null) {
 						this.runConfigureTasks();
 					} else {
-						this.run(task, { attachProblemMatcher: true });
+						this.run(task /*, { attachProblemMatcher: true }*/);
 					}
 				});
 		});
@@ -2034,7 +2024,7 @@ class TaskService extends Disposable implements ITaskService {
 							this.runConfigureDefaultBuildTask();
 							return;
 						}
-						this.run(task, { attachProblemMatcher: true });
+						this.run(task/*, { attachProblemMatcher: true }*/);
 					});
 			});
 		});

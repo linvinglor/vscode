@@ -7,6 +7,7 @@ import { KeybindingsRegistry, KeybindingWeight } from 'vs/platform/keybinding/co
 import { ITerminalService } from 'vs/workbench/parts/terminal/common/terminal';
 
 export const enum TERMINAL_COMMAND_ID {
+	ATTACH_PROBLEM_MATCHER = 'workbench.action.terminal.attachProblemMatcher',
 	FIND_NEXT = 'workbench.action.terminal.findNext',
 	FIND_NEXT_TERMINAL_FOCUS = 'workbench.action.terminal.findNextTerminalFocus',
 	FIND_PREVIOUS = 'workbench.action.terminal.findPrevious',

@@ -25,7 +25,7 @@ class TaskEntry extends base.TaskEntry {
 			return false;
 		}
 		let task = this._task;
-		return this.doRun(task, { attachProblemMatcher: true });
+		return this.doRun(task);
 	}
 }
 

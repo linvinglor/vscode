@@ -16,7 +16,7 @@ import { IPanelService } from 'vs/workbench/services/panel/common/panelService';
 import { attachSelectBoxStyler } from 'vs/platform/theme/common/styler';
 import { IThemeService } from 'vs/platform/theme/common/themeService';
 import { IQuickOpenService } from 'vs/platform/quickOpen/common/quickOpen';
-import { IQuickInputService, IPickOptions, IQuickPickItem } from 'vs/platform/quickinput/common/quickInput';
+import { IQuickInputService, IPickOptions, IQuickPickItem, QuickPickInput } from 'vs/platform/quickinput/common/quickInput';
 import { ActionBarContributor } from 'vs/workbench/browser/actions';
 import { TerminalEntry } from 'vs/workbench/parts/terminal/browser/terminalQuickOpen';
 import { IInstantiationService, ServicesAccessor } from 'vs/platform/instantiation/common/instantiation';
@@ -29,6 +29,10 @@ import { TERMINAL_COMMAND_ID } from 'vs/workbench/parts/terminal/common/terminal
 import { Command } from 'vs/editor/browser/editorExtensions';
 import { timeout } from 'vs/base/common/async';
 import { FindReplaceState } from 'vs/editor/contrib/find/findState';
+import { Task } from 'vscode';
+import { NamedProblemMatcher, ProblemMatcherRegistry } from 'vs/workbench/parts/problemMatching/common/problemMatcher';
+import { URI } from 'vs/base/common/uri';
+import { IOpenerService } from 'vs/platform/opener/common/opener';
 
 export const TERMINAL_PICKER_PREFIX = 'term ';
 
@@ -285,6 +289,95 @@ export class SendSequenceTerminalCommand extends Command {
 			return;
 		}
 		terminalInstance.sendText(args.text, false);
+	}
+}
+
+export class AttachProblemMatcher extends Action {
+
+	public static readonly ID = TERMINAL_COMMAND_ID.ATTACH_PROBLEM_MATCHER;
+	public static readonly LABEL = nls.localize('workbench.action.terminal.attachProblemMatcher', "Attach Problem Matcher to Terminal");
+	public static readonly SHORT_LABEL = nls.localize('workbench.action.terminal.attachProblemMatcher.short', "Attach Problem Matcher");
+
+	constructor(
+		id: string, label: string,
+		@IQuickInputService private quickInputService: IQuickInputService,
+		@IOpenerService private openerService: IOpenerService
+		// @ITerminalService private terminalService: ITerminalService,
+		// @ICommandService private commandService: ICommandService,
+		// @IWorkspaceContextService private workspaceContextService: IWorkspaceContextService
+	) {
+		super(id, label, 'terminal-action attachProblemMatcher');
+	}
+
+	public run(event?: any): PromiseLike<any> {
+		console.log('Add problem matcher here');
+		this.attachProblemMatcher();
+		return Promise.resolve(null);
+	}
+
+	private attachProblemMatcher(): Promise<Task> | undefined {
+		interface ProblemMatcherPickEntry extends IQuickPickItem {
+			matcher: NamedProblemMatcher;
+			never?: boolean;
+			learnMore?: boolean;
+		}
+		let entries: QuickPickInput<ProblemMatcherPickEntry>[] = [];
+		for (let key of ProblemMatcherRegistry.keys()) {
+			let matcher = ProblemMatcherRegistry.get(key);
+			if (matcher.deprecated) {
+				continue;
+			}
+			if (matcher.name === matcher.label) {
+				entries.push({ label: matcher.name, matcher: matcher });
+			} else {
+				entries.push({
+					label: matcher.label,
+					description: `$${matcher.name}`,
+					matcher: matcher
+				});
+			}
+		}
+		if (entries.length > 0) {
+			entries = entries.sort((a, b) => a.label.localeCompare(b.label));
+			entries.unshift({ type: 'separator', label: nls.localize('TaskService.associate', 'associate') });
+			entries.unshift(
+				{ label: nls.localize('TaskService.attachProblemMatcher.continueWithout', 'Continue without scanning the task output'), matcher: undefined },
+				{ label: nls.localize('TaskService.attachProblemMatcher.never', 'Never scan the task output'), matcher: undefined, never: true },
+				{ label: nls.localize('TaskService.attachProblemMatcher.learnMoreAbout', 'Learn more about scanning the task output'), matcher: undefined, learnMore: true }
+			);
+			return this.quickInputService.pick(entries, {
+				placeHolder: nls.localize('selectProblemMatcher', 'Select for which kind of errors and warnings to scan the task output'),
+			}).then((selected) => {
+				if (selected) {
+					if (selected.learnMore) {
+						this.openerService.open(URI.parse('https://go.microsoft.com/fwlink/?LinkId=733558'));
+						return undefined;
+					} else if (selected.never) {
+						// this.customize(task, { problemMatcher: [] }, true);
+						// return task;
+						return undefined;
+					} else if (selected.matcher) {
+						// let newTask = Task.clone(task);
+						// let matcherReference = `$${selected.matcher.name}`;
+						// let properties: CustomizationProperties = { problemMatcher: [matcherReference] };
+						// newTask.problemMatchers = [matcherReference];
+						// let matcher = ProblemMatcherRegistry.get(selected.matcher.name);
+						// if (matcher && matcher.watching !== void 0) {
+						// 	properties.isBackground = true;
+						// 	newTask.isBackground = true;
+						// }
+						// this.customize(task, properties, true);
+						// return newTask;
+					} else {
+						// return task;
+					}
+				} else {
+					return undefined;
+				}
+				return undefined;
+			});
+		}
+		return undefined;
 	}
 }
 

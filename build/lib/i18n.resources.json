@@ -91,6 +91,10 @@
 			"project": "vscode-workbench"
 		},
 		{
+			"name": "vs/workbench/parts/problemMatching",
+			"project": "vscode-workbench"
+		},
+		{
 			"name": "vs/workbench/parts/quickopen",
 			"project": "vscode-workbench"
 		},

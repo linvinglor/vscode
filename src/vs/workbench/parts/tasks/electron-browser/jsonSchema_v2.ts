@@ -9,7 +9,7 @@ import { IJSONSchema } from 'vs/base/common/jsonSchema';
 
 import commonSchema from './jsonSchemaCommon';
 
-import { ProblemMatcherRegistry } from 'vs/workbench/parts/tasks/common/problemMatcher';
+import { ProblemMatcherRegistry } from 'vs/workbench/parts/problemMatching/common/problemMatcher';
 import { TaskDefinitionRegistry } from '../common/taskDefinitionRegistry';
 
 function fixReferences(literal: any) {
