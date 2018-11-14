@@ -21,7 +21,7 @@ import {
 } from 'vs/workbench/parts/tasks/common/tasks';
 
 
-import { ResolveSet, ResolvedVariables } from 'vs/workbench/parts/tasks/common/taskSystem';
+import { ResolveSet, ResolvedVariables } from 'vs/workbench/parts/problemMatching/common/problemSystem';
 import { ITaskService, TaskFilter, ITaskProvider } from 'vs/workbench/parts/tasks/common/taskService';
 
 import { TaskDefinition } from 'vs/workbench/parts/tasks/node/tasks';

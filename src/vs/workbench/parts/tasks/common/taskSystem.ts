@@ -13,6 +13,7 @@ import { Platform } from 'vs/base/common/platform';
 import { IWorkspaceFolder } from 'vs/platform/workspace/common/workspace';
 
 import { Task, TaskEvent, KeyedTaskIdentifier } from './tasks';
+import { ResolveSet, ResolvedVariables } from 'vs/workbench/parts/problemMatching/common/problemSystem';
 
 export const enum TaskErrors {
 	NotConfigured,
@@ -100,20 +101,6 @@ export interface ITaskResolver {
 
 export interface TaskTerminateResponse extends TerminateResponse {
 	task: Task | undefined;
-}
-
-export interface ResolveSet {
-	process?: {
-		name: string;
-		cwd?: string;
-		path?: string;
-	};
-	variables: Set<string>;
-}
-
-export interface ResolvedVariables {
-	process?: string;
-	variables: Map<string, string>;
 }
 
 export interface TaskSystemInfo {

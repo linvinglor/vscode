@@ -37,8 +37,9 @@ import {
 } from 'vs/workbench/parts/tasks/common/tasks';
 import {
 	ITaskSystem, ITaskSummary, ITaskExecuteResult, TaskExecuteKind, TaskError, TaskErrors, ITaskResolver,
-	TelemetryEvent, Triggers, TaskTerminateResponse, TaskSystemInfoResovler, TaskSystemInfo, ResolveSet
+	TelemetryEvent, Triggers, TaskTerminateResponse, TaskSystemInfoResovler, TaskSystemInfo
 } from 'vs/workbench/parts/tasks/common/taskSystem';
+import { ResolveSet } from 'vs/workbench/parts/problemMatching/common/problemSystem';
 
 interface TerminalData {
 	terminal: ITerminalInstance;

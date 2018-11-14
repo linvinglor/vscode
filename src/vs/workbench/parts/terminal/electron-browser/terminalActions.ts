@@ -33,6 +33,10 @@ import { Task } from 'vscode';
 import { NamedProblemMatcher, ProblemMatcherRegistry } from 'vs/workbench/parts/problemMatching/common/problemMatcher';
 import { URI } from 'vs/base/common/uri';
 import { IOpenerService } from 'vs/platform/opener/common/opener';
+import { TerminalProblemAttacher } from 'vs/workbench/parts/problemMatching/electron-browser/terminalProblemAttacher';
+import { IModelService } from 'vs/editor/common/services/modelService';
+import { IMarkerService } from 'vs/platform/markers/common/markers';
+import { IConfigurationResolverService } from 'vs/workbench/services/configurationResolver/common/configurationResolver';
 
 export const TERMINAL_PICKER_PREFIX = 'term ';
 
@@ -301,10 +305,13 @@ export class AttachProblemMatcher extends Action {
 	constructor(
 		id: string, label: string,
 		@IQuickInputService private quickInputService: IQuickInputService,
-		@IOpenerService private openerService: IOpenerService
-		// @ITerminalService private terminalService: ITerminalService,
+		@IOpenerService private openerService: IOpenerService,
+		@IModelService private modelService: IModelService,
+		@IMarkerService private markerService: IMarkerService,
+		@ITerminalService private terminalService: ITerminalService,
 		// @ICommandService private commandService: ICommandService,
-		// @IWorkspaceContextService private workspaceContextService: IWorkspaceContextService
+		@IWorkspaceContextService private workspaceContextService: IWorkspaceContextService,
+		@IConfigurationResolverService private configurationResolverService: IConfigurationResolverService
 	) {
 		super(id, label, 'terminal-action attachProblemMatcher');
 	}
@@ -315,7 +322,7 @@ export class AttachProblemMatcher extends Action {
 		return Promise.resolve(null);
 	}
 
-	private attachProblemMatcher(): Promise<Task> | undefined {
+	private attachProblemMatcher(): Promise<Task> {
 		interface ProblemMatcherPickEntry extends IQuickPickItem {
 			matcher: NamedProblemMatcher;
 			never?: boolean;
@@ -351,33 +358,31 @@ export class AttachProblemMatcher extends Action {
 				if (selected) {
 					if (selected.learnMore) {
 						this.openerService.open(URI.parse('https://go.microsoft.com/fwlink/?LinkId=733558'));
-						return undefined;
+						return Promise.resolve(null);
 					} else if (selected.never) {
 						// this.customize(task, { problemMatcher: [] }, true);
 						// return task;
-						return undefined;
+						return Promise.resolve(null);
 					} else if (selected.matcher) {
 						// let newTask = Task.clone(task);
 						// let matcherReference = `$${selected.matcher.name}`;
 						// let properties: CustomizationProperties = { problemMatcher: [matcherReference] };
 						// newTask.problemMatchers = [matcherReference];
-						// let matcher = ProblemMatcherRegistry.get(selected.matcher.name);
+						let matcher = ProblemMatcherRegistry.get(selected.matcher.name);
 						// if (matcher && matcher.watching !== void 0) {
 						// 	properties.isBackground = true;
 						// 	newTask.isBackground = true;
 						// }
 						// this.customize(task, properties, true);
 						// return newTask;
-					} else {
-						// return task;
+						let attacher = new TerminalProblemAttacher(this.workspaceContextService.getWorkspace().folders[0], this.markerService, this.modelService, this.configurationResolverService);
+						attacher.attachProblemMatcherToTerminal(this.terminalService.getActiveInstance(), [matcher]);
 					}
-				} else {
-					return undefined;
 				}
-				return undefined;
+				return Promise.resolve(null);
 			});
 		}
-		return undefined;
+		return Promise.resolve(null);
 	}
 }
 
