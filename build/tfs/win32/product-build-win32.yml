@@ -120,9 +120,6 @@ steps:
 - powershell: |
     . build/tfs/win32/exec.ps1
     $ErrorActionPreference = "Stop"
-    exec { npm run gulp -- "vscode-win32-$(VSCODE_ARCH)-archive" }
-    # exec { npm run gulp -- "vscode-win32-$(VSCODE_ARCH)-system-setup" --sign }
-    exec { npm run gulp -- "vscode-win32-$(VSCODE_ARCH)-user-setup" --sign }
 
     $Repo = "$(pwd)"
     $Root = "$Repo\.."
@@ -141,8 +138,16 @@ steps:
 
     $assetPlatform = if ("$(VSCODE_ARCH)" -eq "ia32") { "win32" } else { "win32-x64" }
 
+    # Publish archive
+    exec { npm run gulp -- "vscode-win32-$(VSCODE_ARCH)-archive" }
     exec { node build/tfs/common/publish.js $Quality "$global:assetPlatform-archive" archive "VSCode-win32-$(VSCODE_ARCH)-$Version.zip" $Version true $Zip }
+
+    # Publish system setup
+    # exec { npm run gulp -- "vscode-win32-$(VSCODE_ARCH)-system-setup" --sign }
     exec { node build/tfs/common/publish.js $Quality "$global:assetPlatform" setup "VSCodeSetup-$(VSCODE_ARCH)-$Version.exe" $Version true $SystemExe }
+
+    # Publish user setup
+    exec { npm run gulp -- "vscode-win32-$(VSCODE_ARCH)-user-setup" --sign }
     exec { node build/tfs/common/publish.js $Quality "$global:assetPlatform-user" setup "VSCodeUserSetup-$(VSCODE_ARCH)-$Version.exe" $Version true $UserExe }
 
     # publish hockeyapp symbols
