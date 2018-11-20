@@ -41,8 +41,15 @@ export class Debugger implements IDebugger {
 		this.mergedExtensionDescriptions = [extensionDescription];
 	}
 
+	public createDebugAdapter(session: IDebugSession, outputService: IOutputService): Promise<IDebugAdapter> {
+		return new Promise<IDebugAdapter>((resolve, reject) => {
+			this.configurationManager.activateDebuggers('onDebugAdapterProtocolTracker', this.type).then(_ => {
+				resolve(this._createDebugAdapter(session, outputService));
+			}, reject);
+		});
+	}
 
-	createDebugAdapter(session: IDebugSession, outputService: IOutputService): Promise<IDebugAdapter> {
+	private _createDebugAdapter(session: IDebugSession, outputService: IOutputService): Promise<IDebugAdapter> {
 		if (this.inExtHost()) {
 			return Promise.resolve(this.configurationManager.createDebugAdapter(session));
 		} else {
@@ -116,7 +123,7 @@ export class Debugger implements IDebugger {
 		}
 	}
 
-	runInTerminal(args: DebugProtocol.RunInTerminalRequestArguments): Promise<void> {
+	runInTerminal(args: DebugProtocol.RunInTerminalRequestArguments): Promise<number | undefined> {
 		const config = this.configurationService.getValue<ITerminalSettings>('terminal');
 		return this.configurationManager.runInTerminal(this.inExtHost() ? this.type : '*', args, config);
 	}

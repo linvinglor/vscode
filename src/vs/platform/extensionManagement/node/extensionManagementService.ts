@@ -10,7 +10,7 @@ import * as errors from 'vs/base/common/errors';
 import { assign } from 'vs/base/common/objects';
 import { toDisposable, Disposable } from 'vs/base/common/lifecycle';
 import { flatten } from 'vs/base/common/arrays';
-import { extract, buffer, ExtractError, zip, IFile } from 'vs/platform/node/zip';
+import { extract, ExtractError, zip, IFile } from 'vs/platform/node/zip';
 import { ValueCallback, ErrorCallback } from 'vs/base/common/winjs.base';
 import {
 	IExtensionManagementService, IExtensionGalleryService, ILocalExtension,
@@ -47,6 +47,7 @@ import { optional } from 'vs/platform/instantiation/common/instantiation';
 import { Schemas } from 'vs/base/common/network';
 import { CancellationToken } from 'vs/base/common/cancellation';
 import { getPathFromAmdModule } from 'vs/base/common/amd';
+import { getManifest } from 'vs/platform/extensionManagement/node/extensionManagementUtil';
 
 const ERROR_SCANNING_SYS_EXTENSIONS = 'scanningSystem';
 const ERROR_SCANNING_USER_EXTENSIONS = 'scanningUser';
@@ -79,12 +80,6 @@ function parseManifest(raw: string): Promise<{ manifest: IExtensionManifest; met
 	});
 }
 
-export function validateLocalExtension(zipPath: string): Promise<IExtensionManifest> {
-	return buffer(zipPath, 'extension/package.json')
-		.then(buffer => parseManifest(buffer.toString('utf8')))
-		.then(({ manifest }) => manifest);
-}
-
 function readManifest(extensionPath: string): Promise<{ manifest: IExtensionManifest; metadata: IGalleryMetadata; }> {
 	const promises = [
 		pfs.readFile(path.join(extensionPath, 'package.json'), 'utf8')
@@ -115,7 +110,7 @@ export class ExtensionManagementService extends Disposable implements IExtension
 	private systemExtensionsPath: string;
 	private extensionsPath: string;
 	private uninstalledPath: string;
-	private uninstalledFileLimiter: Queue<void>;
+	private uninstalledFileLimiter: Queue<any>;
 	private reportedExtensions: Promise<IReportedExtension[]> | undefined;
 	private lastReportTimestamp = 0;
 	private readonly installingExtensions: Map<string, CancelablePromise<void>> = new Map<string, CancelablePromise<void>>();
@@ -147,7 +142,7 @@ export class ExtensionManagementService extends Disposable implements IExtension
 		this.systemExtensionsPath = environmentService.builtinExtensionsPath;
 		this.extensionsPath = environmentService.extensionsPath;
 		this.uninstalledPath = path.join(this.extensionsPath, '.obsolete');
-		this.uninstalledFileLimiter = new Queue<void>();
+		this.uninstalledFileLimiter = new Queue();
 		this.manifestCache = this._register(new ExtensionsManifestCache(environmentService, this));
 		this.extensionLifecycle = this._register(new ExtensionsLifecycle(this.logService));
 
@@ -204,7 +199,7 @@ export class ExtensionManagementService extends Disposable implements IExtension
 				.then(downloadLocation => {
 					const zipPath = path.resolve(downloadLocation.fsPath);
 
-					return validateLocalExtension(zipPath)
+					return getManifest(zipPath)
 						.then(manifest => {
 							const identifier = { id: getLocalExtensionIdFromManifest(manifest) };
 							if (manifest.engines && manifest.engines.vscode && !isEngineValid(manifest.engines.vscode)) {
@@ -400,7 +395,7 @@ export class ExtensionManagementService extends Disposable implements IExtension
 							.then(
 								zipPath => {
 									this.logService.info('Downloaded extension:', extension.name, zipPath);
-									return validateLocalExtension(zipPath)
+									return getManifest(zipPath)
 										.then(
 											manifest => (<InstallableExtension>{ zipPath, id: getLocalExtensionIdFromManifest(manifest), metadata }),
 											error => Promise.reject(new ExtensionManagementError(this.joinErrors(error).message, INSTALL_ERROR_VALIDATING))
@@ -774,7 +769,7 @@ export class ExtensionManagementService extends Disposable implements IExtension
 	}
 
 	private scanExtensions(root: string, type: LocalExtensionType): Promise<ILocalExtension[]> {
-		const limiter = new Limiter(10);
+		const limiter = new Limiter<any>(10);
 		return pfs.readdir(root)
 			.then(extensionsFolders => Promise.all<ILocalExtension>(extensionsFolders.map(extensionFolder => limiter.queue(() => this.scanExtension(extensionFolder, root, type)))))
 			.then(extensions => extensions.filter(e => e && e.identifier));

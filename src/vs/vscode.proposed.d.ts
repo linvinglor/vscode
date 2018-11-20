@@ -624,6 +624,15 @@ declare module 'vscode' {
 		 * @return A [disposable](#Disposable) that unregisters this provider when being disposed.
 		 */
 		export function registerDebugAdapterProvider(debugType: string, provider: DebugAdapterProvider): Disposable;
+
+		/**
+		 * Register a factory callback for the given debug type that is is called at the start of a debug session in order
+		 * to return a "tracker" object that provides read-access to the communication between VS Code and a debug adapter.
+		 *
+		 * @param debugType A specific debug type or '*' for matching all debug types.
+		 * @param callback A factory callback that is called at the start of a debug session to return a tracker object or `undefined`.
+		 */
+		export function registerDebugAdapterTracker(debugType: string, callback: (session: DebugSession) => DebugAdapterTracker | undefined): Disposable;
 	}
 
 	/**
@@ -1214,6 +1223,14 @@ declare module 'vscode' {
 
 	}
 
+	export interface TreeItem {
+		/**
+		 * A human readable string which is rendered less prominent.
+		 * When `true`, it is derived from [resourceUri](#TreeItem.resourceUri) and when `falsy`, it is not shown.
+		 */
+		description?: string | boolean;
+	}
+
 	export class TreeItem2 extends TreeItem {
 		/**
 		 * Label describing this item. When `falsy`, it is derived from [resourceUri](#TreeItem.resourceUri).
@@ -1237,6 +1254,30 @@ declare module 'vscode' {
 		 * Controls whether the terminal is cleared before executing the task.
 		 */
 		clear?: boolean;
+	}
+
+
+	export enum RerunBehavior {
+		reevaluate = 1,
+		useEvaluated = 2,
+	}
+
+
+	export interface RunOptions {
+		/**
+		 * Controls the behavior of a task when it is rerun.
+		 */
+		rerunBehavior?: RerunBehavior;
+	}
+
+	/**
+	 * A task to execute
+	 */
+	export class Task2 extends Task {
+		/**
+		 * Run options for the task
+		 */
+		runOptions: RunOptions;
 	}
 	//#endregion
 

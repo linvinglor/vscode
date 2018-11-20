@@ -676,10 +676,13 @@ export function createApiFactory(
 				return extHostDebugService.onDidChangeBreakpoints(listener, thisArgs, disposables);
 			},
 			registerDebugConfigurationProvider(debugType: string, provider: vscode.DebugConfigurationProvider) {
-				return extHostDebugService.registerDebugConfigurationProvider(extension, debugType, provider);
+				return extHostDebugService.registerDebugConfigurationProvider(debugType, provider);
 			},
 			registerDebugAdapterProvider(debugType: string, provider: vscode.DebugAdapterProvider) {
 				return extHostDebugService.registerDebugAdapterProvider(extension, debugType, provider);
+			},
+			registerDebugAdapterTracker(debugType: string, callback: (session: vscode.DebugSession) => vscode.DebugAdapterTracker | undefined) {
+				return extHostDebugService.registerDebugAdapterTracker(debugType, callback);
 			},
 			startDebugging(folder: vscode.WorkspaceFolder | undefined, nameOrConfig: string | vscode.DebugConfiguration) {
 				return extHostDebugService.startDebugging(folder, nameOrConfig);
@@ -781,6 +784,7 @@ export function createApiFactory(
 			QuickInputButtons: extHostTypes.QuickInputButtons,
 			Range: extHostTypes.Range,
 			RelativePattern: extHostTypes.RelativePattern,
+			RerunBehavior: extHostTypes.RerunBehavior,
 			Selection: extHostTypes.Selection,
 			ShellExecution: extHostTypes.ShellExecution,
 			ShellQuoting: extHostTypes.ShellQuoting,
@@ -794,6 +798,7 @@ export function createApiFactory(
 			SymbolInformation: extHostTypes.SymbolInformation,
 			SymbolKind: extHostTypes.SymbolKind,
 			Task: extHostTypes.Task,
+			Task2: extHostTypes.Task,
 			TaskGroup: extHostTypes.TaskGroup,
 			TaskPanelKind: extHostTypes.TaskPanelKind,
 			TaskRevealKind: extHostTypes.TaskRevealKind,

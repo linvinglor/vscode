@@ -9322,10 +9322,10 @@ vscode-chokidar@1.6.5:
   optionalDependencies:
     vscode-fsevents "0.3.10"
 
-vscode-debugprotocol@1.32.0:
-  version "1.32.0"
-  resolved "https://registry.yarnpkg.com/vscode-debugprotocol/-/vscode-debugprotocol-1.32.0.tgz#cca9eccb3f73ded5e525e01621a72ca2bb577dc3"
-  integrity sha512-x3+HV+BkLqfl1ZuDJEILAv1sT5mDceuPThDXD12hwXAEjAdfc6MLQFvaoVPuO6C6gb+lHQTd0R9FNkCflEJHbA==
+vscode-debugprotocol@1.33.0-pre.0:
+  version "1.33.0-pre.0"
+  resolved "https://registry.yarnpkg.com/vscode-debugprotocol/-/vscode-debugprotocol-1.33.0-pre.0.tgz#a6c8fd6655ade772f7cbae8994f068bac51a9381"
+  integrity sha512-LRTpPDLkq7fcjvRr8Ttzo+1tiFXuxOcYQ5xhN7i/dYN6ISwg9hcQv4W74n8JBxz1nXdVpbS52KLKQMiZhBwpgg==
 
 vscode-fsevents@0.3.10:
   version "0.3.10"
@@ -9403,10 +9403,10 @@ vscode-ripgrep@^1.2.4:
   resolved "https://registry.yarnpkg.com/vscode-ripgrep/-/vscode-ripgrep-1.2.4.tgz#b3cfbe08ed13f6cf6b134147ea4d982970ab4f70"
   integrity sha512-TysaK20aCSfsFIQGd0DfMshjkHof0fG6zx7DoO0tdWNAZgsvoqLtOWdqHcocICRZ3RSpdiMiEJRaMK+iOzx16w==
 
-vscode-sqlite3@4.0.2:
-  version "4.0.2"
-  resolved "https://registry.yarnpkg.com/vscode-sqlite3/-/vscode-sqlite3-4.0.2.tgz#35389b7ee973f7ba6a8e57cbbdde1608ffc6d60c"
-  integrity sha512-QuXKvwtkjsQgIlU2mDhkp+pNIpwKY99MNwE4PJTOFkck7dtfwnYQwLvuuJ666a2QMDMqCEKYHG5+0bhrGh+gZg==
+vscode-sqlite3@4.0.3:
+  version "4.0.3"
+  resolved "https://registry.yarnpkg.com/vscode-sqlite3/-/vscode-sqlite3-4.0.3.tgz#502705d8ab98bbc7507f5ec31cd20d9b8c03bba2"
+  integrity sha512-DdVeaeRJdQXWmSQ3eHFpoK60d6Jh6w3cMbscgz23ptMqOLsbjJq66dGNqH5dl33M9ZNhwUJx9untqoYa2MBnlg==
   dependencies:
     nan "~2.10.0"
 
