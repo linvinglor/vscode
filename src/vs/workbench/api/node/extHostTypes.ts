@@ -1427,7 +1427,7 @@ export class ProcessExecution implements vscode.ProcessExecution {
 
 	private _process: string;
 	private _args: string[];
-	private _options: vscode.ProcessExecutionOptions;
+	private _options: vscode.ProcessExecutionOptions | undefined;
 
 	constructor(process: string, options?: vscode.ProcessExecutionOptions);
 	constructor(process: string, args: string[], options?: vscode.ProcessExecutionOptions);
@@ -1472,11 +1472,11 @@ export class ProcessExecution implements vscode.ProcessExecution {
 		this._args = value;
 	}
 
-	get options(): vscode.ProcessExecutionOptions {
+	get options(): vscode.ProcessExecutionOptions | undefined {
 		return this._options;
 	}
 
-	set options(value: vscode.ProcessExecutionOptions) {
+	set options(value: vscode.ProcessExecutionOptions | undefined) {
 		this._options = value;
 	}
 
@@ -1500,7 +1500,7 @@ export class ShellExecution implements vscode.ShellExecution {
 	private _commandLine: string;
 	private _command: string | vscode.ShellQuotedString;
 	private _args: (string | vscode.ShellQuotedString)[];
-	private _options: vscode.ShellExecutionOptions;
+	private _options: vscode.ShellExecutionOptions | undefined;
 
 	constructor(commandLine: string, options?: vscode.ShellExecutionOptions);
 	constructor(command: string | vscode.ShellQuotedString, args: (string | vscode.ShellQuotedString)[], options?: vscode.ShellExecutionOptions);
@@ -1554,11 +1554,11 @@ export class ShellExecution implements vscode.ShellExecution {
 		this._args = value || [];
 	}
 
-	get options(): vscode.ShellExecutionOptions {
+	get options(): vscode.ShellExecutionOptions | undefined {
 		return this._options;
 	}
 
-	set options(value: vscode.ShellExecutionOptions) {
+	set options(value: vscode.ShellExecutionOptions | undefined) {
 		this._options = value;
 	}
 
@@ -1598,7 +1598,7 @@ export enum RerunBehavior {
 
 export class Task implements vscode.Task2 {
 
-	private __id: string;
+	private __id: string | undefined;
 
 	private _definition: vscode.TaskDefinition;
 	private _scope: vscode.TaskScope.Global | vscode.TaskScope.Workspace | vscode.WorkspaceFolder;
@@ -1648,11 +1648,11 @@ export class Task implements vscode.Task2 {
 		this._isBackground = false;
 	}
 
-	get _id(): string {
+	get _id(): string | undefined {
 		return this.__id;
 	}
 
-	set _id(value: string) {
+	set _id(value: string | undefined) {
 		this.__id = value;
 	}
 
@@ -1789,11 +1789,11 @@ export class Task implements vscode.Task2 {
 		this._presentationOptions = value;
 	}
 
-	get runOptions(): vscode.RunOptions {
+	get runOptions(): vscode.RunOptions | undefined {
 		return this._runOptions;
 	}
 
-	set runOptions(value: vscode.RunOptions) {
+	set runOptions(value: vscode.RunOptions | null | undefined) {
 		if (value === null) {
 			value = undefined;
 		}
