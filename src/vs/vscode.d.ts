@@ -4713,6 +4713,11 @@ declare module 'vscode' {
 		 * Controls whether to show the "Terminal will be reused by tasks, press any key to close it" message.
 		 */
 		showReuseMessage?: boolean;
+
+		/**
+		 * Controls whether the terminal is cleared before executing the task.
+		 */
+		clear?: boolean;
 	}
 
 	/**
@@ -5009,9 +5014,23 @@ declare module 'vscode' {
 	export class Task {
 
 		/**
+		 * Creates a new task.
+		 *
+		 * @param definition The task definition as defined in the taskDefinitions extension point.
+		 * @param scope Specifies the task's scope. It is either a global or a workspace task or a task for a specific workspace folder.
+		 * @param name The task's name. Is presented in the user interface.
+		 * @param source The task's source (e.g. 'gulp', 'npm', ...). Is presented in the user interface.
+		 * @param execution The process or shell execution.
+		 * @param problemMatchers the names of problem matchers to use, like '$tsc'
+		 *  or '$eslint'. Problem matchers can be contributed by an extension using
+		 *  the `problemMatchers` extension point.
+		 */
+		constructor(taskDefinition: TaskDefinition, scope: WorkspaceFolder | TaskScope.Global | TaskScope.Workspace, name: string, source: string, execution?: ProcessExecution | ShellExecution, problemMatchers?: string | string[]);
+
+		/**
 		 * ~~Creates a new task.~~
 		 *
-		 * @deprecated Use the new constructors that allow specifying a target for the task.
+		 * @deprecated Use the new constructors that allow specifying a scope for the task.
 		 *
 		 * @param definition The task definition as defined in the taskDefinitions extension point.
 		 * @param name The task's name. Is presented in the user interface.
@@ -5024,20 +5043,6 @@ declare module 'vscode' {
 		constructor(taskDefinition: TaskDefinition, name: string, source: string, execution?: ProcessExecution | ShellExecution, problemMatchers?: string | string[]);
 
 		/**
-		 * Creates a new task.
-		 *
-		 * @param definition The task definition as defined in the taskDefinitions extension point.
-		 * @param target Specifies the task's target. It is either a global or a workspace task or a task for a specific workspace folder.
-		 * @param name The task's name. Is presented in the user interface.
-		 * @param source The task's source (e.g. 'gulp', 'npm', ...). Is presented in the user interface.
-		 * @param execution The process or shell execution.
-		 * @param problemMatchers the names of problem matchers to use, like '$tsc'
-		 *  or '$eslint'. Problem matchers can be contributed by an extension using
-		 *  the `problemMatchers` extension point.
-		 */
-		constructor(taskDefinition: TaskDefinition, target: WorkspaceFolder | TaskScope.Global | TaskScope.Workspace, name: string, source: string, execution?: ProcessExecution | ShellExecution, problemMatchers?: string | string[]);
-
-		/**
 		 * The task's definition.
 		 */
 		definition: TaskDefinition;
@@ -5045,7 +5050,7 @@ declare module 'vscode' {
 		/**
 		 * The task's scope.
 		 */
-		scope?: TaskScope.Global | TaskScope.Workspace | WorkspaceFolder;
+		readonly scope?: TaskScope.Global | TaskScope.Workspace | WorkspaceFolder;
 
 		/**
 		 * The task's name
@@ -5055,7 +5060,7 @@ declare module 'vscode' {
 		/**
 		 * The task's execution engine
 		 */
-		execution: ProcessExecution | ShellExecution;
+		execution?: ProcessExecution | ShellExecution;
 
 		/**
 		 * Whether the task is a background task or not.
@@ -8412,6 +8417,7 @@ declare module 'vscode' {
 
 		/**
 		 * The currently active [debug console](#DebugConsole).
+		 * If no debug session is active, output sent to the debug console is not shown.
 		 */
 		export let activeDebugConsole: DebugConsole;
 

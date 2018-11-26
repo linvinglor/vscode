@@ -1,7 +1,7 @@
 {
   "name": "code-oss-dev",
   "version": "1.30.0",
-  "distro": "cedfc514fbce202dad3ec5f86033796d70369b2a",
+  "distro": "fba0cf41ab9929feb43552b523058b9ed60f5827",
   "author": {
     "name": "Microsoft Corporation"
   },
@@ -51,7 +51,7 @@
     "vscode-nsfw": "1.1.2",
     "vscode-proxy-agent": "0.1.1",
     "vscode-ripgrep": "^1.2.4",
-    "vscode-sqlite3": "4.0.3",
+    "vscode-sqlite3": "4.0.5",
     "vscode-textmate": "^4.0.1",
     "vscode-xterm": "3.9.0-beta13",
     "winreg": "^1.2.4",
