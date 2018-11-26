@@ -12,7 +12,7 @@ import { domEvent } from 'vs/base/browser/event';
 import { ScrollableElement } from 'vs/base/browser/ui/scrollbar/scrollableElement';
 import { ScrollEvent, ScrollbarVisibility } from 'vs/base/common/scrollable';
 import { RangeMap, shift } from './rangeMap';
-import { IListVirtualDelegate, IListRenderer, IListMouseEvent, IListTouchEvent, IListGestureEvent } from './list';
+import { IListVirtualDelegate, IListRenderer, IListMouseEvent, IListTouchEvent, IListGestureEvent, IDragAndDrop } from './list';
 import { RowCache, IRow } from './rowCache';
 import { isWindows } from 'vs/base/common/platform';
 import * as browser from 'vs/base/browser/browser';
@@ -43,7 +43,8 @@ interface IItem<T> {
 	renderWidth: number | undefined;
 }
 
-export interface IListViewOptions {
+export interface IListViewOptions<T> {
+	readonly dnd?: IDragAndDrop<T>;
 	readonly useShadows?: boolean;
 	readonly verticalScrollMode?: ScrollbarVisibility;
 	readonly setRowLineHeight?: boolean;
@@ -86,7 +87,7 @@ export class ListView<T> implements ISpliceable<T>, IDisposable {
 		container: HTMLElement,
 		private virtualDelegate: IListVirtualDelegate<T>,
 		renderers: IListRenderer<T, any>[],
-		options: IListViewOptions = DefaultOptions
+		options: IListViewOptions<T> = DefaultOptions
 	) {
 		this.items = [];
 		this.itemId = 0;

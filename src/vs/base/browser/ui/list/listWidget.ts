@@ -16,7 +16,7 @@ import { KeyCode } from 'vs/base/common/keyCodes';
 import { StandardKeyboardEvent } from 'vs/base/browser/keyboardEvent';
 import { Event, Emitter, EventBufferer, chain, mapEvent, anyEvent } from 'vs/base/common/event';
 import { domEvent } from 'vs/base/browser/event';
-import { IListVirtualDelegate, IListRenderer, IListEvent, IListContextMenuEvent, IListMouseEvent, IListTouchEvent, IListGestureEvent } from './list';
+import { IListVirtualDelegate, IListRenderer, IListEvent, IListContextMenuEvent, IListMouseEvent, IListTouchEvent, IListGestureEvent, IDragAndDrop } from './list';
 import { ListView, IListViewOptions } from './listView';
 import { Color } from 'vs/base/common/color';
 import { mixin } from 'vs/base/common/objects';
@@ -696,8 +696,9 @@ export class DefaultStyleController implements IStyleController {
 	}
 }
 
-export interface IListOptions<T> extends IListViewOptions, IListStyles {
+export interface IListOptions<T> extends IListViewOptions<T>, IListStyles {
 	identityProvider?: IIdentityProvider<T>;
+	dnd?: IDragAndDrop<T>;
 	ariaLabel?: string;
 	mouseSupport?: boolean;
 	selectOnMouseDown?: boolean;

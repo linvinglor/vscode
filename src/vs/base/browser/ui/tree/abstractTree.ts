@@ -6,7 +6,7 @@
 import 'vs/css!./media/tree';
 import { IDisposable, dispose } from 'vs/base/common/lifecycle';
 import { IListOptions, List, IIdentityProvider, IMultipleSelectionController, IListStyles, IAccessibilityProvider } from 'vs/base/browser/ui/list/listWidget';
-import { IListVirtualDelegate, IListRenderer, IListMouseEvent, IListEvent, IListContextMenuEvent } from 'vs/base/browser/ui/list/list';
+import { IListVirtualDelegate, IListRenderer, IListMouseEvent, IListEvent, IListContextMenuEvent, IDragAndDrop } from 'vs/base/browser/ui/list/list';
 import { append, $, toggleClass } from 'vs/base/browser/dom';
 import { Event, Relay, chain, mapEvent } from 'vs/base/common/event';
 import { StandardKeyboardEvent } from 'vs/base/browser/keyboardEvent';
@@ -51,11 +51,34 @@ export function createComposedTreeListOptions<T, R extends { element: T }>(optio
 		};
 	}
 
+	let dnd: IDragAndDrop<R> | undefined = undefined;
+
+	if (options.dnd) {
+		const _dnd = options.dnd;
+		dnd = {
+			getDragURI(e) {
+				return _dnd.getDragURI(e.element);
+			},
+			onDragStart: _dnd.onDragStart.bind(_dnd),
+			onDragOver(data, e, event) {
+				return _dnd.onDragOver(data, e.element, event);
+			},
+			drop(data, e, event) {
+				return _dnd.drop(data, e.element, event);
+			},
+		};
+
+		if (_dnd.getDragLabel) {
+			dnd.getDragLabel = (es) => _dnd.getDragLabel(es.map(e => e.element));
+		}
+	}
+
 	return {
 		...options,
 		identityProvider,
 		multipleSelectionController,
-		accessibilityProvider
+		accessibilityProvider,
+		dnd
 	};
 }
 
