@@ -1005,7 +1005,9 @@ export class List<T> implements ISpliceable<T>, IDisposable {
 			this.disposables.push(controller);
 		}
 
-		if (typeof options.mouseSupport !== 'boolean' || options.mouseSupport) {
+		const mouseSupport = typeof options.mouseSupport === 'boolean' ? options.mouseSupport : true;
+
+		if (mouseSupport) {
 			this.mouseController = new MouseController(this, this.view, options);
 			this.disposables.push(this.mouseController);
 			this.onContextMenu = this.mouseController.onContextMenu;

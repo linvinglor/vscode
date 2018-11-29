@@ -101,7 +101,7 @@
 
 			function createAsyncDataTree() {
 				const delegate = {
-					getHeight() { return 22; },
+					getHeight() { return 50; },
 					getTemplateId() { return 'template'; }
 				};
 
@@ -170,7 +170,12 @@
 					}
 				};
 
-				const tree = new AsyncDataTree(container, delegate, [renderer], dataSource, { filter: treeFilter, identityProvider });
+				const tree = new AsyncDataTree(container, delegate, [renderer], dataSource, {
+					filter: treeFilter,
+					identityProvider,
+					mouseSupport: false,
+					keyboardSupport: false
+				});
 
 				return { tree, treeFilter };
 			}
