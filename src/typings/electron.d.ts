@@ -1,4 +1,4 @@
-// Type definitions for Electron 4.0.0-beta.7
+// Type definitions for Electron 4.0.0-beta.8
 // Project: http://electronjs.org/
 // Definitions by: The Electron Team <https://github.com/electron/electron>
 // Definitions: https://github.com/electron/electron-typescript-definitions
@@ -977,6 +977,11 @@ declare namespace Electron {
 		 */
 		show(): void;
 		/**
+		 * Show the about panel with the values defined in the app's .plist file or with
+		 * the options set via app.setAboutPanelOptions(options).
+		 */
+		showAboutPanel(): void;
+		/**
 		 * Start accessing a security scoped resource. With this method Electron
 		 * applications that are packaged for the Mac App Store may reach outside their
 		 * sandbox to access files chosen by the user. See Apple's documentation for a
@@ -1704,7 +1709,8 @@ declare namespace Electron {
 		 */
 		setBackgroundColor(backgroundColor: string): void;
 		/**
-		 * Resizes and moves the window to the supplied bounds
+		 * Resizes and moves the window to the supplied bounds. Any properties that are not
+		 * supplied will default to their current values.
 		 */
 		setBounds(bounds: Rectangle, animate?: boolean): void;
 		setBrowserView(browserView: BrowserView): void;
@@ -6293,6 +6299,11 @@ declare namespace Electron {
 		 */
 		setAudioMuted(muted: boolean): void;
 		/**
+		 * Controls whether or not this WebContents will throttle animations and timers
+		 * when the page becomes backgrounded. This also affects the Page Visibility API.
+		 */
+		setBackgroundThrottling(allowed: boolean): void;
+		/**
 		 * Uses the devToolsWebContents as the target WebContents to show devtools. The
 		 * devToolsWebContents must not have done any navigation, and it should not be used
 		 * for other purposes after the call. By default Electron manages the devtools by
@@ -8157,6 +8168,11 @@ declare namespace Electron {
 		 * Should only be specified for checkbox or radio type menu items.
 		 */
 		checked?: boolean;
+		/**
+		 * If false, the accelerator won't be registered with the system, but it will still
+		 * be displayed. Defaults to true.
+		 */
+		registerAccelerator?: boolean;
 		/**
 		 * Should be specified for submenu type menu items. If submenu is specified, the
 		 * type: 'submenu' can be omitted. If the value is not a then it will be
