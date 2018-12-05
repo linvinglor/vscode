@@ -35,7 +35,7 @@ import { IMouseEvent } from 'vs/base/browser/mouseEvent';
 import { localize } from 'vs/nls';
 import { timeout } from 'vs/base/common/async';
 import { CollapseAllAction } from 'vs/base/parts/tree/browser/treeDefaults';
-import { editorFindMatchHighlight, editorFindMatchHighlightBorder } from 'vs/platform/theme/common/colorRegistry';
+import { editorFindMatchHighlight, editorFindMatchHighlightBorder, textLinkForeground, textCodeBlockBackground, focusBorder } from 'vs/platform/theme/common/colorRegistry';
 import { IMarkdownString } from 'vs/base/common/htmlContent';
 import { isString } from 'vs/base/common/types';
 import { renderMarkdown, RenderOptions } from 'vs/base/browser/htmlContentRenderer';
@@ -188,6 +188,7 @@ export class CustomTreeView extends Disposable implements ITreeView {
 	private _hasIconForLeafNode = false;
 	private _showCollapseAllAction = false;
 
+	private focused: boolean = false;
 	private domNode: HTMLElement;
 	private treeContainer: HTMLElement;
 	private _messageValue: string | IMarkdownString | undefined;
@@ -352,7 +353,7 @@ export class CustomTreeView extends Disposable implements ITreeView {
 	}
 
 	focus(): void {
-		if (this.tree) {
+		if (this.tree && this.root.children && this.root.children.length > 0) {
 			// Make sure the current selected element is revealed
 			const selectedElement = this.tree.getSelection()[0];
 			if (selectedElement) {
@@ -361,6 +362,8 @@ export class CustomTreeView extends Disposable implements ITreeView {
 
 			// Pass Focus to Viewer
 			this.tree.domFocus();
+		} else {
+			this.domNode.focus();
 		}
 	}
 
@@ -372,6 +375,9 @@ export class CustomTreeView extends Disposable implements ITreeView {
 		this.domNode = DOM.$('.tree-explorer-viewlet-tree-view');
 		this.messageElement = DOM.append(this.domNode, DOM.$('.message'));
 		this.treeContainer = DOM.append(this.domNode, DOM.$('.customview-tree'));
+		const focusTracker = this._register(DOM.trackFocus(this.domNode));
+		this._register(focusTracker.onDidFocus(() => this.focused = true));
+		this._register(focusTracker.onDidBlur(() => this.focused = false));
 	}
 
 	private createTree() {
@@ -387,7 +393,7 @@ export class CustomTreeView extends Disposable implements ITreeView {
 		this._register(this.tree.onDidExpandItem(e => this._onDidExpandItem.fire(e.item.getElement())));
 		this._register(this.tree.onDidCollapseItem(e => this._onDidCollapseItem.fire(e.item.getElement())));
 		this._register(this.tree.onDidChangeSelection(e => this._onDidChangeSelection.fire(e.selection)));
-		this.tree.setInput(this.root);
+		this.tree.setInput(this.root).then(() => this.updateContentAreas());
 	}
 
 	private updateMessage(): void {
@@ -406,7 +412,7 @@ export class CustomTreeView extends Disposable implements ITreeView {
 			this.resetMessageElement();
 			this._messageValue = message;
 			if (isString(this._messageValue)) {
-				this.messageElement.innerText = this._messageValue;
+				this.messageElement.textContent = this._messageValue;
 			} else {
 				this.markdownResult = this.markdownRenderer.render(this._messageValue);
 				DOM.append(this.messageElement, this.markdownResult.element);
@@ -507,9 +513,26 @@ export class CustomTreeView extends Disposable implements ITreeView {
 
 	private doRefresh(elements: ITreeItem[]): Promise<void> {
 		if (this.tree) {
-			return Promise.all(elements.map(e => this.tree.refresh(e))).then(() => null);
+			DOM.removeClass(this.treeContainer, 'hasChildren');
+			return Promise.all(elements.map(e => this.tree.refresh(e)))
+				.then(() => {
+					this.updateContentAreas();
+					if (this.focused) {
+						this.focus();
+					}
+				});
 		}
 		return Promise.resolve(null);
+	}
+
+	private updateContentAreas(): void {
+		if (this.root.children && this.root.children.length) {
+			DOM.addClass(this.treeContainer, 'hasChildren');
+			this.domNode.removeAttribute('tabindex');
+		} else {
+			DOM.removeClass(this.treeContainer, 'hasChildren');
+			this.domNode.setAttribute('tabindex', '0');
+		}
 	}
 
 	private onSelection({ payload }: any): void {
@@ -581,6 +604,18 @@ registerThemingParticipant((theme, collector) => {
 	const findMatchHighlightColorBorder = theme.getColor(editorFindMatchHighlightBorder);
 	if (findMatchHighlightColorBorder) {
 		collector.addRule(`.file-icon-themable-tree .monaco-tree-row .content .monaco-highlighted-label .highlight { color: unset !important; border: 1px dotted ${findMatchHighlightColorBorder}; box-sizing: border-box; }`);
+	}
+	const link = theme.getColor(textLinkForeground);
+	if (link) {
+		collector.addRule(`.tree-explorer-viewlet-tree-view > .message a { color: ${link}; }`);
+	}
+	const focustBorderColor = theme.getColor(focusBorder);
+	if (focustBorderColor) {
+		collector.addRule(`.tree-explorer-viewlet-tree-view > .message a:focus { outline: 1px solid ${focustBorderColor}; outline-offset: -1px; }`);
+	}
+	const codeBackground = theme.getColor(textCodeBlockBackground);
+	if (codeBackground) {
+		collector.addRule(`.tree-explorer-viewlet-tree-view > .message code { background-color: ${codeBackground}; }`);
 	}
 });
 

@@ -23,6 +23,7 @@ import * as Tasks from '../common/tasks';
 import { TaskDefinitionRegistry } from '../common/taskDefinitionRegistry';
 
 import { TaskDefinition } from 'vs/workbench/parts/tasks/node/tasks';
+import { ConfiguredInput } from 'vs/workbench/services/configurationResolver/common/configurationResolver';
 
 export const enum ShellQuoting {
 	/**
@@ -120,7 +121,8 @@ export interface PresentationOptionsConfig {
 }
 
 export interface RunOptionsConfig {
-	rerunBehavior?: string;
+	reevaluateOnRerun?: boolean;
+	runOn?: string;
 }
 
 export interface TaskIdentifier {
@@ -450,6 +452,11 @@ export interface BaseTaskRunnerConfiguration {
 	 * Problem matcher declarations
 	 */
 	declares?: ProblemMatcherConfig.NamedProblemMatcher[];
+
+	/**
+	 * Optional user input varaibles.
+	 */
+	inputs?: ConfiguredInput[];
 }
 
 /**
@@ -631,6 +638,30 @@ function _freeze<T>(this: void, target: T, properties: MetaData<T, any>[]): Read
 	}
 	Object.freeze(target);
 	return target;
+}
+
+export namespace RunOnOptions {
+	export function fromString(value: string | undefined): Tasks.RunOnOptions {
+		if (!value) {
+			return Tasks.RunOnOptions.default;
+		}
+		switch (value.toLowerCase()) {
+			case 'folderopen':
+				return Tasks.RunOnOptions.folderOpen;
+			case 'default':
+			default:
+				return Tasks.RunOnOptions.default;
+		}
+	}
+}
+
+export namespace RunOptions {
+	export function fromConfiguration(value: RunOptionsConfig | undefined): Tasks.RunOptions {
+		return {
+			reevaluateOnRerun: value ? value.reevaluateOnRerun : true,
+			runOn: value ? RunOnOptions.fromString(value.runOn) : Tasks.RunOnOptions.default
+		};
+	}
 }
 
 interface ParseContext {
@@ -1293,9 +1324,9 @@ namespace ConfiguringTask {
 			type: type,
 			configures: taskIdentifier,
 			_id: `${typeDeclaration.extensionId}.${taskIdentifier._key}`,
-			_source: Objects.assign({}, source, { config: configElement }),
+			_source: Objects.assign({} as Tasks.WorkspaceTaskSource, source, { config: configElement }),
 			_label: undefined,
-			runOptions: { rerunBehavior: external.runOptions ? Tasks.RerunBehavior.fromString(external.runOptions.rerunBehavior) : Tasks.RerunBehavior.reevaluate },
+			runOptions: RunOptions.fromConfiguration(external.runOptions)
 		};
 		let configuration = ConfigurationProperties.from(external, context, true);
 		if (configuration) {
@@ -1349,13 +1380,13 @@ namespace CustomTask {
 		let result: Tasks.CustomTask = {
 			type: Tasks.CUSTOMIZED_TASK_TYPE,
 			_id: context.uuidMap.getUUID(taskName),
-			_source: Objects.assign({}, source, { config: { index, element: external, file: '.vscode\\tasks.json', workspaceFolder: context.workspaceFolder } }),
+			_source: Objects.assign({} as Tasks.WorkspaceTaskSource, source, { config: { index, element: external, file: '.vscode\\tasks.json', workspaceFolder: context.workspaceFolder } }),
 			_label: taskName,
 			name: taskName,
 			identifier: taskName,
 			hasDefinedMatchers: false,
 			command: undefined,
-			runOptions: { rerunBehavior: external.runOptions ? Tasks.RerunBehavior.fromString(external.runOptions.rerunBehavior) : Tasks.RerunBehavior.reevaluate }
+			runOptions: RunOptions.fromConfiguration(external.runOptions)
 		};
 		let configuration = ConfigurationProperties.from(external, context, false);
 		if (configuration) {
@@ -1849,7 +1880,7 @@ class ConfigurationParser {
 			let name = Tasks.CommandString.value(globals.command.name);
 			let task: Tasks.CustomTask = {
 				_id: context.uuidMap.getUUID(name),
-				_source: Objects.assign({}, source, { config: { index: -1, element: fileConfig, workspaceFolder: context.workspaceFolder } }),
+				_source: Objects.assign({} as Tasks.WorkspaceTaskSource, source, { config: { index: -1, element: fileConfig, workspaceFolder: context.workspaceFolder } }),
 				_label: name,
 				type: Tasks.CUSTOMIZED_TASK_TYPE,
 				name: name,
@@ -1864,7 +1895,7 @@ class ConfigurationParser {
 				isBackground: isBackground,
 				problemMatchers: matchers,
 				hasDefinedMatchers: false,
-				runOptions: { rerunBehavior: Tasks.RerunBehavior.reevaluate },
+				runOptions: { reevaluateOnRerun: true },
 			};
 			let value = GroupKind.from(fileConfig.group);
 			if (value) {

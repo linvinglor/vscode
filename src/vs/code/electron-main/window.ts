@@ -24,6 +24,7 @@ import { ISerializableCommandAction } from 'vs/platform/actions/common/actions';
 import * as perf from 'vs/base/common/performance';
 import { resolveMarketplaceHeaders } from 'vs/platform/extensionManagement/node/extensionGalleryService';
 import { getBackgroundColor } from 'vs/code/electron-main/theme';
+import { IStorageMainService } from 'vs/platform/storage/node/storageMainService';
 
 export interface IWindowCreationOptions {
 	state: IWindowState;
@@ -84,7 +85,8 @@ export class CodeWindow extends Disposable implements ICodeWindow {
 		@IConfigurationService private configurationService: IConfigurationService,
 		@IStateService private stateService: IStateService,
 		@IWorkspacesMainService private workspacesMainService: IWorkspacesMainService,
-		@IBackupMainService private backupMainService: IBackupMainService
+		@IBackupMainService private backupMainService: IBackupMainService,
+		@IStorageMainService private storageMainService: IStorageMainService
 	) {
 		super();
 
@@ -158,7 +160,7 @@ export class CodeWindow extends Disposable implements ICodeWindow {
 			options.tabbingIdentifier = product.nameShort; // this opts in to sierra tabs
 		}
 
-		const useCustomTitleStyle = getTitleBarStyle(this.configurationService, this.environmentService) === 'custom';
+		const useCustomTitleStyle = getTitleBarStyle(this.configurationService, this.environmentService, !!config.extensionDevelopmentPath) === 'custom';
 		if (useCustomTitleStyle) {
 			options.titleBarStyle = 'hidden';
 			this.hiddenTitleBarStyle = true;
@@ -367,7 +369,7 @@ export class CodeWindow extends Disposable implements ICodeWindow {
 				}
 			};
 
-			screen.addListener('display-metrics-changed', () => displayMetricsChangedListener());
+			screen.addListener('display-metrics-changed', displayMetricsChangedListener);
 			this._register(toDisposable(() => screen.removeListener('display-metrics-changed', displayMetricsChangedListener)));
 		}
 
@@ -466,7 +468,7 @@ export class CodeWindow extends Disposable implements ICodeWindow {
 
 	private registerNavigationListenerOn(command: 'swipe' | 'app-command', back: 'left' | 'browser-backward', forward: 'right' | 'browser-forward', acrossEditors: boolean) {
 		this._win.on(command as 'swipe' /* | 'app-command' */, (e: Electron.Event, cmd: string) => {
-			if (this._readyState !== ReadyState.READY) {
+			if (!this.isReady) {
 				return; // window must be ready
 			}
 
@@ -601,6 +603,9 @@ export class CodeWindow extends Disposable implements ICodeWindow {
 
 		// Dump Perf Counters
 		windowConfiguration.perfEntries = perf.exportEntries();
+
+		// Parts splash
+		windowConfiguration.partsSplashData = this.storageMainService.get('parts-splash-data', void 0);
 
 		// Config (combination of process.argv and window configuration)
 		const environment = parseArgs(process.argv);

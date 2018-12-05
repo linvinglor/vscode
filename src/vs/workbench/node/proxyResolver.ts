@@ -24,26 +24,34 @@ export function connectProxyResolver(
 	extHostLogService: ExtHostLogService,
 	mainThreadTelemetry: MainThreadTelemetryShape
 ) {
-	const agent = createProxyAgent(extHostWorkspace, extHostLogService, mainThreadTelemetry);
+	const agent = createProxyAgent(extHostWorkspace, extHostConfiguration, extHostLogService, mainThreadTelemetry);
 	const lookup = createPatchedModules(extHostConfiguration, agent);
 	return configureModuleLoading(extensionService, lookup);
 }
 
-const maxCacheEntries = 10000;
+const maxCacheEntries = 5000; // Cache can grow twice that much due to 'oldCache'.
 
 function createProxyAgent(
 	extHostWorkspace: ExtHostWorkspace,
+	extHostConfiguration: ExtHostConfiguration,
 	extHostLogService: ExtHostLogService,
 	mainThreadTelemetry: MainThreadTelemetryShape
 ) {
+	let settingsProxy = proxyFromConfigURL(extHostConfiguration.getConfiguration('http')
+		.get<string>('proxy'));
+	extHostConfiguration.onDidChangeConfiguration(e => {
+		settingsProxy = proxyFromConfigURL(extHostConfiguration.getConfiguration('http')
+			.get<string>('proxy'));
+	});
+	const env = process.env;
+	let envProxy = proxyFromConfigURL(env.https_proxy || env.HTTPS_PROXY || env.http_proxy || env.HTTP_PROXY); // Not standardized.
 
 	let cacheRolls = 0;
 	let oldCache = new Map<string, string>();
 	let cache = new Map<string, string>();
-	function getCacheKey(url: string) {
-		// Expecting proxies to usually be the same per host. Keeping the path in for now.
-		const queryIndex = url.indexOf('?');
-		return queryIndex === -1 ? url : url.substr(0, queryIndex);
+	function getCacheKey(url: nodeurl.UrlWithStringQuery) {
+		// Expecting proxies to usually be the same per scheme://host:port. Assuming that for performance.
+		return nodeurl.format({ ...url, ...{ pathname: undefined, search: undefined, hash: undefined } });
 	}
 	function getCachedProxy(key: string) {
 		let proxy = cache.get(key);
@@ -72,6 +80,9 @@ function createProxyAgent(
 	let duration = 0;
 	let errorCount = 0;
 	let cacheCount = 0;
+	let envCount = 0;
+	let settingsCount = 0;
+	let localhostCount = 0;
 	function logEvent() {
 		timeout = undefined;
 		/* __GDPR__
@@ -81,11 +92,14 @@ function createProxyAgent(
 				"errorCount": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "isMeasurement": true },
 				"cacheCount": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "isMeasurement": true },
 				"cacheSize": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "isMeasurement": true },
-				"cacheRolls": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "isMeasurement": true }
+				"cacheRolls": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "isMeasurement": true },
+				"envCount": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "isMeasurement": true },
+				"settingsCount": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "isMeasurement": true },
+				"localhostCount": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "isMeasurement": true }
 			}
 		*/
-		mainThreadTelemetry.$publicLog('resolveProxy', { count, duration, errorCount, cacheCount, cacheSize: cache.size, cacheRolls });
-		count = duration = errorCount = cacheCount = 0;
+		mainThreadTelemetry.$publicLog('resolveProxy', { count, duration, errorCount, cacheCount, cacheSize: cache.size, cacheRolls, envCount, settingsCount, localhostCount });
+		count = duration = errorCount = cacheCount = envCount = settingsCount = localhostCount = 0;
 	}
 
 	function resolveProxy(url: string, callback: (proxy?: string) => void) {
@@ -93,7 +107,31 @@ function createProxyAgent(
 			timeout = setTimeout(logEvent, 10 * 60 * 1000);
 		}
 
-		const key = getCacheKey(url);
+		const parsedUrl = nodeurl.parse(url); // Coming from Node's URL, sticking with that.
+
+		const hostname = parsedUrl.hostname;
+		if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname === '::ffff:127.0.0.1') {
+			localhostCount++;
+			callback('DIRECT');
+			extHostLogService.trace('ProxyResolver#resolveProxy localhost', url, 'DIRECT');
+			return;
+		}
+
+		if (settingsProxy) {
+			settingsCount++;
+			callback(settingsProxy);
+			extHostLogService.trace('ProxyResolver#resolveProxy settings', url, settingsProxy);
+			return;
+		}
+
+		if (envProxy) {
+			envCount++;
+			callback(envProxy);
+			extHostLogService.trace('ProxyResolver#resolveProxy env', url, envProxy);
+			return;
+		}
+
+		const key = getCacheKey(parsedUrl);
 		const proxy = getCachedProxy(key);
 		if (proxy) {
 			cacheCount++;
@@ -121,28 +159,46 @@ function createProxyAgent(
 	return new ProxyAgent({ resolveProxy });
 }
 
+function proxyFromConfigURL(configURL: string) {
+	const url = (configURL || '').trim();
+	const i = url.indexOf('://');
+	if (i === -1) {
+		return undefined;
+	}
+	const scheme = url.substr(0, i).toLowerCase();
+	const proxy = url.substr(i + 3);
+	if (scheme === 'http') {
+		return 'PROXY ' + proxy;
+	} else if (scheme === 'https') {
+		return 'HTTPS ' + proxy;
+	} else if (scheme === 'socks') {
+		return 'SOCKS ' + proxy;
+	}
+	return undefined;
+}
+
 function createPatchedModules(extHostConfiguration: ExtHostConfiguration, agent: http.Agent) {
 	const setting = {
 		config: extHostConfiguration.getConfiguration('http')
-			.get<string>('systemProxy') || 'off'
+			.get<string>('proxySupport') || 'off'
 	};
 	extHostConfiguration.onDidChangeConfiguration(e => {
 		setting.config = extHostConfiguration.getConfiguration('http')
-			.get<string>('systemProxy') || 'off';
+			.get<string>('proxySupport') || 'off';
 	});
 
 	return {
 		http: {
 			off: assign({}, http, patches(http, agent, { config: 'off' }, true)),
 			on: assign({}, http, patches(http, agent, { config: 'on' }, true)),
-			force: assign({}, http, patches(http, agent, { config: 'force' }, true)),
+			override: assign({}, http, patches(http, agent, { config: 'override' }, true)),
 			onRequest: assign({}, http, patches(http, agent, setting, true)),
 			default: assign(http, patches(http, agent, setting, false)) // run last
 		},
 		https: {
 			off: assign({}, https, patches(https, agent, { config: 'off' }, true)),
 			on: assign({}, https, patches(https, agent, { config: 'on' }, true)),
-			force: assign({}, https, patches(https, agent, { config: 'force' }, true)),
+			override: assign({}, https, patches(https, agent, { config: 'override' }, true)),
 			onRequest: assign({}, https, patches(https, agent, setting, true)),
 			default: assign(https, patches(https, agent, setting, false)) // run last
 		}
@@ -169,12 +225,12 @@ function patches(originals: typeof http | typeof https, agent: http.Agent, setti
 			}
 			options = options || {};
 
-			const config = onRequest && (<any>options)._vscodeSystemProxy || setting.config;
+			const config = onRequest && ((<any>options)._vscodeProxySupport || /* LS */ (<any>options)._vscodeSystemProxy) || setting.config;
 			if (config === 'off') {
 				return original.apply(null, arguments);
 			}
 
-			if (!options.socketPath && (config === 'force' || config === 'on' && !options.agent)) {
+			if (!options.socketPath && (config === 'override' || config === 'on' && !options.agent) && options.agent !== agent) {
 				if (url) {
 					const parsed = typeof url === 'string' ? nodeurl.parse(url) : url;
 					options = {
@@ -184,6 +240,8 @@ function patches(originals: typeof http | typeof https, agent: http.Agent, setti
 						path: parsed.pathname,
 						...options
 					};
+				} else {
+					options = { ...options };
 				}
 				options.agent = agent;
 				return original(options, callback);
@@ -208,7 +266,7 @@ function configureModuleLoading(extensionService: ExtHostExtensionService, looku
 				const modules = lookup[request];
 				const ext = extensionPaths.findSubstr(URI.file(parent.filename).fsPath);
 				if (ext && ext.enableProposedApi) {
-					return modules[(<any>ext).systemProxy] || modules.onRequest;
+					return modules[(<any>ext).proxySupport] || modules.onRequest;
 				}
 				return modules.default;
 			};

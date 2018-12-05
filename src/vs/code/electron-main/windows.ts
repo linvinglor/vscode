@@ -15,7 +15,7 @@ import { CodeWindow, defaultWindowState } from 'vs/code/electron-main/window';
 import { hasArgs, asArray } from 'vs/platform/environment/node/argv';
 import { ipcMain as ipc, screen, BrowserWindow, dialog, systemPreferences, app } from 'electron';
 import { IPathWithLineAndColumn, parseLineAndColumnAware } from 'vs/code/node/paths';
-import { ILifecycleService, UnloadReason, IWindowUnloadEvent } from 'vs/platform/lifecycle/electron-main/lifecycleMain';
+import { ILifecycleService, UnloadReason, IWindowUnloadEvent, LifecycleService } from 'vs/platform/lifecycle/electron-main/lifecycleMain';
 import { IConfigurationService } from 'vs/platform/configuration/common/configuration';
 import { ILogService } from 'vs/platform/log/common/log';
 import { IWindowSettings, OpenContext, IPath, IWindowConfiguration, INativeOpenDialogOptions, IPathsToWaitFor, IEnterWorkspaceResult, IMessageBoxResult, INewWindowOptions } from 'vs/platform/windows/common/windows';
@@ -216,9 +216,9 @@ export class WindowsManager implements IWindowsMainService {
 			});
 		});
 
-		// React to workbench loaded events from windows
-		ipc.on('vscode:workbenchLoaded', (event: any, windowId: number) => {
-			this.logService.trace('IPC#vscode-workbenchLoaded');
+		// React to workbench ready events from windows
+		ipc.on('vscode:workbenchReady', (event: any, windowId: number) => {
+			this.logService.trace('IPC#vscode-workbenchReady');
 
 			const win = this.getWindowById(windowId);
 			if (win) {
@@ -242,7 +242,7 @@ export class WindowsManager implements IWindowsMainService {
 
 		// Handle various lifecycle events around windows
 		this.lifecycleService.onBeforeWindowUnload(e => this.onBeforeWindowUnload(e));
-		this.lifecycleService.onBeforeWindowClose(win => this.onBeforeWindowClose(win as ICodeWindow));
+		this.lifecycleService.onBeforeWindowClose(window => this.onBeforeWindowClose(window));
 		this.lifecycleService.onBeforeShutdown(() => this.onBeforeShutdown());
 		this.onWindowsCountChanged(e => {
 			if (e.newCount - e.oldCount > 0) {
@@ -1285,7 +1285,7 @@ export class WindowsManager implements IWindowsMainService {
 			window.win.on('closed', () => this.onWindowClosed(window));
 
 			// Lifecycle
-			this.lifecycleService.registerWindow(window);
+			(this.lifecycleService as LifecycleService).registerWindow(window);
 		}
 
 		// Existing window
@@ -1304,31 +1304,41 @@ export class WindowsManager implements IWindowsMainService {
 			}
 		}
 
-		// Only load when the window has not vetoed this
-		this.lifecycleService.unload(window, UnloadReason.LOAD).then(veto => {
-			if (!veto) {
-
-				// Register window for backups
-				if (!configuration.extensionDevelopmentPath) {
-					if (configuration.workspace) {
-						configuration.backupPath = this.backupMainService.registerWorkspaceBackupSync(configuration.workspace);
-					} else if (configuration.folderUri) {
-						configuration.backupPath = this.backupMainService.registerFolderBackupSync(configuration.folderUri);
-					} else {
-						const backupFolder = options.emptyWindowBackupInfo && options.emptyWindowBackupInfo.backupFolder;
-						configuration.backupPath = this.backupMainService.registerEmptyWindowBackupSync({ backupFolder, remoteAuthority: configuration.remoteAuthority });
-					}
+		// If the window was already loaded, make sure to unload it
+		// first and only load the new configuration if that was
+		// not vetoed
+		if (window.isReady) {
+			this.lifecycleService.unload(window, UnloadReason.LOAD).then(veto => {
+				if (!veto) {
+					this.doOpenInBrowserWindow(window, configuration, options);
 				}
-
-				// Load it
-				window.load(configuration);
-
-				// Signal event
-				this._onWindowLoad.fire(window.id);
-			}
-		});
+			});
+		} else {
+			this.doOpenInBrowserWindow(window, configuration, options);
+		}
 
 		return window;
+	}
+
+	private doOpenInBrowserWindow(window: ICodeWindow, configuration: IWindowConfiguration, options: IOpenBrowserWindowOptions): void {
+
+		// Register window for backups
+		if (!configuration.extensionDevelopmentPath) {
+			if (configuration.workspace) {
+				configuration.backupPath = this.backupMainService.registerWorkspaceBackupSync(configuration.workspace);
+			} else if (configuration.folderUri) {
+				configuration.backupPath = this.backupMainService.registerFolderBackupSync(configuration.folderUri);
+			} else {
+				const backupFolder = options.emptyWindowBackupInfo && options.emptyWindowBackupInfo.backupFolder;
+				configuration.backupPath = this.backupMainService.registerEmptyWindowBackupSync({ backupFolder, remoteAuthority: configuration.remoteAuthority });
+			}
+		}
+
+		// Load it
+		window.load(configuration);
+
+		// Signal event
+		this._onWindowLoad.fire(window.id);
 	}
 
 	private getNewWindowState(configuration: IWindowConfiguration): INewWindowState {
